@@ -1,0 +1,109 @@
+"use client";
+
+import React from 'react';
+import { Card, CardBody, CardFooter } from '@heroui/card';
+import { Chip } from '@heroui/chip';
+import { Badge } from '@heroui/badge';
+import { Button } from '@heroui/button';
+import { SaaSApp } from '@/types/saas';
+import { getAppIcon } from '@/config/icons';
+import { ArrowUpRight, Users, Activity } from 'lucide-react';
+
+interface ModernAppCardProps {
+  app: SaaSApp;
+  onClick: (app: SaaSApp) => void;
+}
+
+export function ModernAppCard({ app, onClick }: ModernAppCardProps) {
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'online': return 'success';
+      case 'maintenance': return 'warning';
+      case 'offline': return 'danger';
+      default: return 'default';
+    }
+  };
+
+  const { icon: AppIcon, color } = getAppIcon(app.id);
+
+  return (
+    <Card 
+      isPressable
+      onClick={() => onClick(app)}
+      className="glass-card hover:glass-card-hover transition-all duration-200 cursor-pointer"
+    >
+      <CardBody className="p-6">
+        {/* App Icon and Status */}
+        <div className="flex items-start justify-between mb-4">
+          {app.image ? (
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-content2 ring-2 ring-primary ring-offset-2 ring-offset-background">
+              <img 
+                src={app.image} 
+                alt={app.name} 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="p-3 rounded-full bg-content2">
+              <AppIcon size={24} className="text-primary" />
+            </div>
+          )}
+          <Badge
+            content=""
+            color={getStatusColor(app.status)}
+            variant="dot"
+            placement="top-right"
+          >
+            <Chip
+              size="sm"
+              variant="flat"
+              color={getStatusColor(app.status)}
+            >
+              {app.status}
+            </Chip>
+          </Badge>
+        </div>
+
+        {/* App Info */}
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold">{app.name}</h3>
+          <p className="text-sm text-default-500 line-clamp-2">
+            {app.description}
+          </p>
+        </div>
+
+        {/* Metrics */}
+        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-divider">
+          <div className="flex items-center gap-1.5">
+            <Users size={14} className="text-default-400" />
+            <span className="text-xs text-default-500">
+              {app.activeUsers.toLocaleString()}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Activity size={14} className="text-default-400" />
+            <span className="text-xs text-default-500">
+              {app.uptime}% uptime
+            </span>
+          </div>
+        </div>
+      </CardBody>
+
+      <CardFooter className="px-6 py-3 border-t border-divider">
+        <div className="flex items-center justify-between w-full">
+          <span className="text-xs text-default-400">
+            {app.category}
+          </span>
+          <Button 
+            size="sm" 
+            variant="light"
+            endContent={<ArrowUpRight size={14} />}
+            className="text-primary"
+          >
+            Open
+          </Button>
+        </div>
+      </CardFooter>
+    </Card>
+  );
+}
