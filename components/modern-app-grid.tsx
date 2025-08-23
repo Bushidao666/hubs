@@ -8,6 +8,7 @@ import { ModernAppCard } from './modern-app-card';
 import { ModernLoadingModal } from './modern-loading-modal';
 import { SaaSApp } from '@/types/saas';
 import { saasApps } from '@/config/saas-apps';
+import { supabase } from '@/lib/supabaseClient';
 import { Search, Filter, Grid3X3, List } from 'lucide-react';
 
 export function ModernAppGrid() {
@@ -18,15 +19,23 @@ export function ModernAppGrid() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const handleAppClick = (app: SaaSApp) => {
+  const handleAppClick = async (app: SaaSApp) => {
     setSelectedApp(app);
     setIsLoading(true);
-    
-    setTimeout(() => {
-      console.log(`Opening ${app.name}...`);
+    try {
+      // Mapeie o id visual para o slug do Hub
+      const slug = app.id === 'bs-cloaker' || app.name.toLowerCase().includes('cloaker')
+        ? 'bs-cloaker'
+        : app.id;
+      // Nome RPC exposto pelo PostgREST é snake_case: hub_create_sso_link
+      const { data, error } = await supabase.rpc('hub_create_sso_link', { app_slug: slug, redir: '/' });
+      if (error) throw error;
+      window.location.href = data as string;
+    } catch (e: any) {
+      console.error('SSO error', e?.message || e);
       setIsLoading(false);
       setSelectedApp(null);
-    }, 2000);
+    }
   };
 
   const categories = ['all', ...Array.from(new Set(apps.map(app => app.category)))];
