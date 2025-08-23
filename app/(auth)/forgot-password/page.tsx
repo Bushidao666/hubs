@@ -4,12 +4,9 @@ import React, { useState } from "react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_HUB_SUPABASE_URL as string,
-  process.env.NEXT_PUBLIC_HUB_SUPABASE_ANON_KEY as string
-);
+// usando o browser client com cookies
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

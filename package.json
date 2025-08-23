@@ -59,6 +59,8 @@
     "@heroui/user": "^2.2.20",
     "@react-aria/ssr": "3.9.10",
     "@react-aria/visually-hidden": "3.8.26",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.50.5",
     "clsx": "2.1.1",
     "framer-motion": "11.18.2",

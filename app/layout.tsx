@@ -30,6 +30,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Fix SSR cookie hydration for Supabase session cookies
+  // Ensura que o Next inclua cabeçalhos Set-Cookie do middleware nas páginas
   return (
     <html suppressHydrationWarning lang="en" className="cyberpunk-dark">
       <head />

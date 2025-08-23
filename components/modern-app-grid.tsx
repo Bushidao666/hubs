@@ -27,7 +27,7 @@ export function ModernAppGrid() {
       const slug = app.id === 'bs-cloaker' || app.name.toLowerCase().includes('cloaker')
         ? 'bs-cloaker'
         : app.id;
-      // Nome RPC exposto pelo PostgREST é snake_case: hub_create_sso_link
+      // Wrapper público exposto no schema public
       const { data, error } = await supabase.rpc('hub_create_sso_link', { app_slug: slug, redir: '/' });
       if (error) throw error;
       window.location.href = data as string;

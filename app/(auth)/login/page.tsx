@@ -5,12 +5,9 @@ import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_HUB_SUPABASE_URL as string,
-  process.env.NEXT_PUBLIC_HUB_SUPABASE_ANON_KEY as string
-);
+// usando o browser client com cookies para garantir sessão acessível no middleware
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,13 +20,33 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
+    console.log('[LOGIN] start', { email });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    console.log('[LOGIN] result', { error, session: data?.session });
     if (error) {
+      setLoading(false);
       setError(error.message);
       return;
     }
-    router.replace("/");
+    try {
+      // Grava cookies via API para middleware SSR enxergar a sessão
+      const resp = await fetch('/api/auth/set', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          access_token: data.session?.access_token,
+          refresh_token: data.session?.refresh_token,
+        }),
+      });
+      console.log('[LOGIN] set cookies status', resp.status);
+    } catch (e) {
+      console.warn('[LOGIN] set cookies error', e);
+    }
+    setLoading(false);
+    const params = new URLSearchParams(window.location.search);
+    const to = params.get('redirectedFrom') || '/';
+    console.log('[LOGIN] redirect to', to);
+    router.replace(to);
   };
 
   return (

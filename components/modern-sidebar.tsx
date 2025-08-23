@@ -27,17 +27,14 @@ export function ModernSidebar({ user }: ModernSidebarProps) {
       setEmail(uemail || 'user@blacksider.hub');
       setName(uemail?.split('@')[0] || 'User');
       if (!uid) return;
-      const { data } = await supabase
-        .from('storage.objects')
-        .select('name')
-        .eq('bucket_id', 'avatars')
-        .ilike('name', `${uid}/%`)
-        .limit(1)
-        .maybeSingle();
-      if (data?.name) {
-        const { data: url } = supabase.storage.from('avatars').getPublicUrl(data.name);
-        setAvatarUrl(url.publicUrl);
-      }
+      try {
+        const list = await supabase.storage.from('avatars').list(uid, { limit: 1 });
+        const file = list.data?.[0]?.name;
+        if (file) {
+          const { data: url } = supabase.storage.from('avatars').getPublicUrl(`${uid}/${file}`);
+          setAvatarUrl(url.publicUrl);
+        }
+      } catch {}
     };
     load();
   }, []);

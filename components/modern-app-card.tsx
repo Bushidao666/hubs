@@ -45,9 +45,7 @@ export function ModernAppCard({ app, onClick }: ModernAppCardProps) {
 
   return (
     <Card 
-      isPressable
-      onClick={() => onClick(app)}
-      className="glass-card hover:glass-card-hover transition-all duration-200 cursor-pointer"
+      className="glass-card hover:glass-card-hover transition-all duration-200"
     >
       <CardBody className="p-6">
         {/* App Icon and Status */}
@@ -93,7 +91,7 @@ export function ModernAppCard({ app, onClick }: ModernAppCardProps) {
           <div className="flex items-center gap-1.5">
             <Users size={14} className="text-default-400" />
             <span className="text-xs text-default-500">
-              {app.activeUsers.toLocaleString()}
+              {app.activeUsers.toLocaleString('en-US')}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -116,6 +114,7 @@ export function ModernAppCard({ app, onClick }: ModernAppCardProps) {
             isDisabled={!available || !enabled || status !== 'online'}
             endContent={<ArrowUpRight size={14} />}
             className="text-primary"
+            onClick={() => available && enabled && status === 'online' && onClick(app)}
           >
             {available && enabled && status === 'online' ? 'Open' : 'Unavailable'}
           </Button>
