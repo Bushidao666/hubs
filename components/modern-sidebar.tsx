@@ -7,26 +7,65 @@ import { Card, CardBody } from '@heroui/card';
 import { Chip } from '@heroui/chip';
 import { UserProfile } from '@/types/saas';
 import { Shield, Zap, TrendingUp, Cpu } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 interface ModernSidebarProps {
   user?: UserProfile;
 }
 
 export function ModernSidebar({ user }: ModernSidebarProps) {
-  const defaultUser: UserProfile = {
+  const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
+  const [email, setEmail] = React.useState<string>('');
+  const [name, setName] = React.useState<string>('User');
+  const [tier, setTier] = React.useState<string>('pro');
+
+  React.useEffect(() => {
+    const load = async () => {
+      const { data: session } = await supabase.auth.getSession();
+      const uid = session.session?.user.id;
+      const uemail = session.session?.user.email || '';
+      setEmail(uemail || 'user@blacksider.hub');
+      setName(uemail?.split('@')[0] || 'User');
+      if (!uid) return;
+      const { data } = await supabase
+        .from('storage.objects')
+        .select('name')
+        .eq('bucket_id', 'avatars')
+        .ilike('name', `${uid}/%`)
+        .limit(1)
+        .maybeSingle();
+      if (data?.name) {
+        const { data: url } = supabase.storage.from('avatars').getPublicUrl(data.name);
+        setAvatarUrl(url.publicUrl);
+      }
+    };
+    load();
+  }, []);
+
+  const onUploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const { data: session } = await supabase.auth.getSession();
+    const uid = session.session?.user.id;
+    if (!uid) return;
+    const path = `${uid}/${Date.now()}_${file.name}`;
+    await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+    setAvatarUrl(data.publicUrl);
+  };
+
+  const currentUser: UserProfile = user || {
     id: 'usr_001',
-    name: 'John Doe',
-    neuralId: 'USR-2025',
-    avatarUrl: 'https://i.pravatar.cc/150?u=a042581f4e29026024d',
-    joinDate: new Date('2025-01-15'),
-    tier: 'pro',
+    name: name,
+    neuralId: 'USR-HUB',
+    avatarUrl: avatarUrl || 'https://i.pravatar.cc/150?u=a042581f4e29026024d',
+    joinDate: new Date(),
+    tier: tier as any,
     accessLevel: 95,
     syncLevel: 87,
     securityLevel: 100,
     bandwidthUsage: 45
   };
-
-  const currentUser = user || defaultUser;
 
   return (
     <aside className="w-full h-full bg-content1 border-r border-divider overflow-y-auto">
@@ -35,13 +74,22 @@ export function ModernSidebar({ user }: ModernSidebarProps) {
         <Card className="glass-card">
           <CardBody className="p-6">
             <div className="flex items-center gap-4">
-              <Avatar
-                src={currentUser.avatarUrl}
-                className="w-16 h-16"
-              />
+              <div className="relative">
+                <Avatar
+                  src={currentUser.avatarUrl}
+                  className="w-16 h-16"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={onUploadAvatar}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  title="Trocar avatar"
+                />
+              </div>
               <div className="flex-1">
                 <h2 className="text-lg font-semibold">{currentUser.name}</h2>
-                <p className="text-sm text-default-500">ID: {currentUser.neuralId}</p>
+                <p className="text-xs text-default-500">{email}</p>
                 <div className="mt-2">
                   <Chip 
                     size="sm"
@@ -60,7 +108,6 @@ export function ModernSidebar({ user }: ModernSidebarProps) {
                 color="primary"
                 variant="flat"
                 size="sm"
-                startContent={<Settings size={16} />}
               >
                 Account Settings
               </Button>
@@ -68,7 +115,6 @@ export function ModernSidebar({ user }: ModernSidebarProps) {
                 fullWidth 
                 variant="light"
                 size="sm"
-                startContent={<TrendingUp size={16} />}
               >
                 Upgrade Plan
               </Button>

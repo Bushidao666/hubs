@@ -102,7 +102,7 @@ export function ModernAppGrid() {
               }}
             >
               {categories.map((category) => (
-                <SelectItem key={category} value={category}>
+                <SelectItem key={category}>
                   {category === 'all' ? 'All Categories' : category}
                 </SelectItem>
               ))}

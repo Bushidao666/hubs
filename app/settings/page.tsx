@@ -237,10 +237,10 @@ export default function Settings() {
                       value: "text-primary"
                     }}
                   >
-                    <SelectItem key="30" value="30">30 FPS</SelectItem>
-                    <SelectItem key="60" value="60">60 FPS</SelectItem>
-                    <SelectItem key="120" value="120">120 FPS</SelectItem>
-                    <SelectItem key="144" value="144">144 FPS</SelectItem>
+                    <SelectItem key="30">30 FPS</SelectItem>
+                    <SelectItem key="60">60 FPS</SelectItem>
+                    <SelectItem key="120">120 FPS</SelectItem>
+                    <SelectItem key="144">144 FPS</SelectItem>
                   </Select>
                 </div>
               </CardBody>

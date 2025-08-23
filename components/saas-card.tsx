@@ -60,7 +60,6 @@ export function SaaSCard({ app, onClick }: SaaSCardProps) {
           <Badge
             content=""
             color={getStatusColor(app.status)}
-            variant="dot"
             placement="top-right"
             className="animate-pulse"
           >

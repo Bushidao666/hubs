@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
@@ -12,7 +12,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_HUB_SUPABASE_ANON_KEY as string
 );
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
   const params = useSearchParams();
   const tokenHash = params.get("token_hash");
@@ -82,4 +82,10 @@ export default function ResetPasswordPage() {
   );
 }
 
-
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
+  );
+}

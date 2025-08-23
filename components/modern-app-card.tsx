@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardBody, CardFooter } from '@heroui/card';
 import { Chip } from '@heroui/chip';
 import { Badge } from '@heroui/badge';
@@ -8,6 +8,7 @@ import { Button } from '@heroui/button';
 import { SaaSApp } from '@/types/saas';
 import { getAppIcon } from '@/config/icons';
 import { ArrowUpRight, Users, Activity } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 interface ModernAppCardProps {
   app: SaaSApp;
@@ -15,6 +16,22 @@ interface ModernAppCardProps {
 }
 
 export function ModernAppCard({ app, onClick }: ModernAppCardProps) {
+  const [available, setAvailable] = useState<boolean>(true);
+  const [status, setStatus] = useState<string>('online');
+  const [enabled, setEnabled] = useState<boolean>(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase.rpc('hub_apps_catalog');
+      if (error) return;
+      const row = (data as any[])?.find(r => r.slug === (app.id === 'bs-cloaker' || app.name.toLowerCase().includes('cloaker') ? 'bs-cloaker' : app.id));
+      if (row) {
+        setAvailable(!!row.available);
+        setStatus(row.status);
+        setEnabled(row.enabled);
+      }
+    })();
+  }, [app.id, app.name]);
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'online': return 'success';
@@ -51,15 +68,14 @@ export function ModernAppCard({ app, onClick }: ModernAppCardProps) {
           <Badge
             content=""
             color={getStatusColor(app.status)}
-            variant="dot"
             placement="top-right"
           >
             <Chip
               size="sm"
               variant="flat"
-              color={getStatusColor(app.status)}
+              color={getStatusColor(status)}
             >
-              {app.status}
+              {status}
             </Chip>
           </Badge>
         </div>
@@ -96,11 +112,12 @@ export function ModernAppCard({ app, onClick }: ModernAppCardProps) {
           </span>
           <Button 
             size="sm" 
-            variant="light"
+            variant={available && enabled ? 'light' : 'flat'}
+            isDisabled={!available || !enabled || status !== 'online'}
             endContent={<ArrowUpRight size={14} />}
             className="text-primary"
           >
-            Open
+            {available && enabled && status === 'online' ? 'Open' : 'Unavailable'}
           </Button>
         </div>
       </CardFooter>
