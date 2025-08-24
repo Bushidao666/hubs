@@ -7,6 +7,8 @@ import { Switch } from "@heroui/switch";
 import { Select, SelectItem } from "@heroui/select";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
+import { Input } from "@heroui/input";
+import { Textarea } from "@heroui/input";
 import { supabase } from "@/lib/supabaseClient";
 
 type AdminApp = {
@@ -14,6 +16,8 @@ type AdminApp = {
   name: string;
   enabled: boolean;
   status: "online" | "maintenance" | "offline";
+  sso_login_url?: string;
+  description?: string | null;
 };
 
 export default function AdminAppsPage() {
@@ -52,17 +56,17 @@ export default function AdminAppsPage() {
     })();
   }, []);
 
-  const updateApp = async (slug: string, patch: Partial<AdminApp>) => {
-    setApps(prev => prev.map(a => (a.slug === slug ? { ...a, ...patch } : a)));
-    const { error } = await supabase.rpc("hub_admin_update_app", {
-      p_slug: slug,
-      p_enabled: patch.enabled ?? null,
-      p_status: (patch.status as string) ?? null,
+  const updateApp = async (app: AdminApp) => {
+    const { error } = await supabase.rpc("hub_admin_upsert_app", {
+      p_slug: app.slug,
+      p_name: app.name,
+      p_sso_login_url: app.sso_login_url || '',
+      p_enabled: app.enabled,
+      p_description: app.description || '',
+      p_status: app.status || 'online'
     });
-    if (error) {
-      // rollback fetch
-      await fetchApps();
-    }
+    if (error) setError(error.message);
+    await fetchApps();
   };
 
   const statusColor = (s: string) => {
@@ -104,12 +108,16 @@ export default function AdminAppsPage() {
               <TableColumn>Slug</TableColumn>
               <TableColumn>Status</TableColumn>
               <TableColumn>Enabled</TableColumn>
+              <TableColumn>SSO URL</TableColumn>
+              <TableColumn>Descrição</TableColumn>
               <TableColumn>Ações</TableColumn>
             </TableHeader>
             <TableBody emptyContent={loading ? "Carregando..." : "Nenhum app"}>
               {apps.map((app) => (
                 <TableRow key={app.slug}>
-                  <TableCell>{app.name}</TableCell>
+                  <TableCell>
+                    <Input size="sm" value={app.name} onValueChange={(v)=> setApps(prev=> prev.map(a=> a.slug===app.slug?{...a,name:v}:a))} />
+                  </TableCell>
                   <TableCell className="text-default-500 font-mono text-xs">{app.slug}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -122,7 +130,7 @@ export default function AdminAppsPage() {
                         selectedKeys={[app.status]}
                         onSelectionChange={(keys) => {
                           const val = Array.from(keys)[0] as AdminApp["status"];
-                          updateApp(app.slug, { status: val });
+                          setApps(prev=> prev.map(a=> a.slug===app.slug?{...a,status:val}:a))
                         }}
                         className="w-40"
                       >
@@ -136,11 +144,17 @@ export default function AdminAppsPage() {
                     <Switch
                       size="sm"
                       isSelected={app.enabled}
-                      onValueChange={(v) => updateApp(app.slug, { enabled: v })}
+                      onValueChange={(v) => setApps(prev=> prev.map(a=> a.slug===app.slug?{...a,enabled:v}:a))}
                     />
                   </TableCell>
+                  <TableCell className="max-w-sm">
+                    <Input size="sm" value={app.sso_login_url || ''} onValueChange={(v)=> setApps(prev=> prev.map(a=> a.slug===app.slug?{...a,sso_login_url:v}:a))} />
+                  </TableCell>
+                  <TableCell className="max-w-md">
+                    <Textarea size="sm" value={app.description || ''} onValueChange={(v)=> setApps(prev=> prev.map(a=> a.slug===app.slug?{...a,description:v}:a))} />
+                  </TableCell>
                   <TableCell>
-                    <Button size="sm" variant="light" onPress={() => updateApp(app.slug, {})}>
+                    <Button size="sm" variant="flat" onPress={() => updateApp(app)}>
                       Salvar
                     </Button>
                   </TableCell>
