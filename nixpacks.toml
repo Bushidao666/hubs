@@ -5,7 +5,8 @@ providers = ["node"]
 cmds = [
   "node -v",
   "npm -v",
-  "npm ci --no-audit --no-fund --verbose"
+  "ls -la",
+  "npm install --frozen-lockfile --no-audit --no-fund --verbose"
 ]
 
 [phases.build]
