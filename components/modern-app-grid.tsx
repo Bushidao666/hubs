@@ -19,18 +19,40 @@ export function ModernAppGrid() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
+  const resolveSlug = (app: SaaSApp) => {
+    // Prefer explicit property if existir no objeto
+    const anyApp = app as any;
+    if (anyApp.slug && typeof anyApp.slug === 'string') return anyApp.slug;
+    const txt = `${app.id} ${app.name}`.toLowerCase();
+    // Mapas heurísticos para o Protocolo Fantasma (BS Cloaker)
+    if (
+      txt.includes('bs-cloaker') ||
+      txt.includes('cloaker') ||
+      txt.includes('protocolo') ||
+      txt.includes('fantasma')
+    ) {
+      return 'bs-cloaker';
+    }
+    return app.id;
+  };
+
   const handleAppClick = async (app: SaaSApp) => {
     setSelectedApp(app);
     setIsLoading(true);
     try {
-      // Mapeie o id visual para o slug do Hub
-      const slug = app.id === 'bs-cloaker' || app.name.toLowerCase().includes('cloaker')
-        ? 'bs-cloaker'
-        : app.id;
-      // Wrapper público exposto no schema public
-      const { data, error } = await supabase.rpc('hub_create_sso_link', { app_slug: slug, redir: '/' });
-      if (error) throw error;
-      window.location.href = data as string;
+      const slug = resolveSlug(app);
+      // Chama via API route para garantir cookie de sessão no SSR
+      const resp = await fetch('/api/sso/link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ app_slug: slug, redir: '/' })
+      });
+      if (!resp.ok) {
+        const j = await resp.json().catch(() => ({}));
+        throw new Error(j?.error || 'sso link failed');
+      }
+      const json = await resp.json();
+      window.location.assign(json.url as string);
     } catch (e: any) {
       console.error('SSO error', e?.message || e);
       setIsLoading(false);

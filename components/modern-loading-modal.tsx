@@ -28,7 +28,6 @@ export function ModernLoadingModal({ app, onClose }: ModernLoadingModalProps) {
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(progressInterval);
-          setTimeout(onClose, 500);
           return 100;
         }
         return prev + 25;
@@ -36,7 +35,7 @@ export function ModernLoadingModal({ app, onClose }: ModernLoadingModalProps) {
     }, 500);
 
     return () => clearInterval(progressInterval);
-  }, [onClose]);
+  }, []);
 
   useEffect(() => {
     const stepIndex = Math.floor(progress / 25);
