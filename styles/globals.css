@@ -95,4 +95,71 @@
   .hover-lift:hover {
     transform: translateY(-2px);
   }
+
+  /* Admin panel utilities */
+  .admin-grid-pattern {
+    background-image: 
+      linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  .admin-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .admin-card-hover {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s;
+  }
+  
+  .admin-card-hover:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+  }
+
+  .admin-input {
+    background-color: #171717;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .admin-button-primary {
+    background-color: #00ff00;
+    color: #000000;
+    transition: background-color 0.2s;
+  }
+  
+  .admin-button-primary:hover {
+    background-color: rgba(0, 255, 0, 0.9);
+  }
+
+  .admin-button-secondary {
+    background-color: #171717;
+    color: #fafafa;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: background-color 0.2s;
+  }
+  
+  .admin-button-secondary:hover {
+    background-color: #262626;
+  }
+
+  .neon-glow {
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+  }
+
+  .neon-glow-strong {
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+  }
 }

@@ -9,6 +9,14 @@ const config = {
   ],
   theme: {
     extend: {
+      backgroundColor: {
+        'glass': 'rgba(0, 0, 0, 0.4)',
+        'glass-hover': 'rgba(0, 0, 0, 0.5)',
+      },
+      borderColor: {
+        'subtle': 'rgba(255, 255, 255, 0.1)',
+        'subtle-hover': 'rgba(255, 255, 255, 0.15)',
+      },
       fontFamily: {
         sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
         mono: ["SF Mono", "Monaco", "Inconsolata", "monospace"],

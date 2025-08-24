@@ -68,7 +68,7 @@ export function ModernSidebar({ user }: ModernSidebarProps) {
     <aside className="w-full h-full bg-content1 border-r border-divider overflow-y-auto">
       <div className="p-6 space-y-6">
         {/* User Profile Card */}
-        <Card className="glass-card">
+        <Card className="bg-glass backdrop-blur-md border border-subtle">
           <CardBody className="p-6">
             <div className="flex items-center gap-4">
               <div className="relative">

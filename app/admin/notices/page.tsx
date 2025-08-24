@@ -5,6 +5,8 @@ import { Button } from '@heroui/button';
 import { Input } from '@heroui/input';
 import { Textarea } from '@heroui/input';
 import { Select, SelectItem } from '@heroui/select';
+import { Card, CardBody } from '@heroui/card';
+import { Chip } from '@heroui/chip';
 
 export default function AdminNoticesPage() {
   const [items, setItems] = React.useState<any[]>([]);
@@ -35,27 +37,42 @@ export default function AdminNoticesPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-lg font-semibold">Admin • Avisos</h1>
+    <div className="min-h-screen p-6 space-y-6 bg-background">
+      {/* Grid background pattern */}
+      <div className="fixed inset-0 bg-[linear-gradient(rgba(0,255,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,255,0,0.03)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
+      
+      <h1 className="text-lg font-semibold text-foreground relative">Admin • <span className="text-primary">Avisos</span></h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input label="Título" value={form.title} onValueChange={(v)=>setForm({...form,title:v})}/>
-        <Select label="Nível" selectedKeys={[form.level]} onSelectionChange={(k)=>setForm({...form,level:Array.from(k)[0] as string})}>
-          {['info','warning','critical'].map(l=> <SelectItem key={l}>{l}</SelectItem>)}
-        </Select>
-        <Textarea label="Mensagem" value={form.message} onValueChange={(v)=>setForm({...form,message:v})}/>
-        <div className="flex items-end"><Button onPress={save} isDisabled={loading || !form.title || !form.message}>Salvar</Button></div>
-      </div>
-
-      <div className="space-y-2">
-        {loading && <div>Carregando...</div>}
-        {items.map((n)=> (
-          <div key={n.id} className="border rounded-md p-3">
-            <div className="text-sm text-default-500">{n.level.toUpperCase()} • {new Date(n.created_at).toLocaleString()}</div>
-            <div className="font-medium">{n.title}</div>
-            <div className="text-sm">{n.message}</div>
+      <Card className="bg-glass backdrop-blur-md border border-subtle relative">
+        <CardBody>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input label="Título" value={form.title} onValueChange={(v)=>setForm({...form,title:v})} classNames={{inputWrapper: "bg-content1 border-subtle"}}/>
+            <Select label="Nível" selectedKeys={[form.level]} onSelectionChange={(k)=>setForm({...form,level:Array.from(k)[0] as string})} classNames={{trigger: "bg-content1 border-subtle"}}>
+              {['info','warning','critical'].map(l=> <SelectItem key={l}>{l}</SelectItem>)}
+            </Select>
+            <Textarea label="Mensagem" value={form.message} onValueChange={(v)=>setForm({...form,message:v})} classNames={{inputWrapper: "bg-content1 border-subtle"}}/>
+            <div className="flex items-end"><Button color="primary" onPress={save} isDisabled={loading || !form.title || !form.message}>Salvar</Button></div>
           </div>
-        ))}
+        </CardBody>
+      </Card>
+
+      <div className="space-y-3 relative">
+        {loading && <div className="text-default-500">Carregando...</div>}
+        {items.map((n)=> {
+          const levelColor = n.level === 'critical' ? 'danger' : n.level === 'warning' ? 'warning' : 'primary';
+          return (
+            <Card key={n.id} className="bg-glass backdrop-blur-md border border-subtle hover:bg-black/50 hover:border-white/15 transition-all duration-200">
+              <CardBody className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Chip size="sm" color={levelColor} variant="flat">{n.level.toUpperCase()}</Chip>
+                  <span className="text-xs text-default-500">{new Date(n.created_at).toLocaleString()}</span>
+                </div>
+                <div className="font-medium text-foreground">{n.title}</div>
+                <div className="text-sm text-default-500">{n.message}</div>
+              </CardBody>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

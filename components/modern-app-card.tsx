@@ -45,7 +45,7 @@ export function ModernAppCard({ app, onClick }: ModernAppCardProps) {
 
   return (
     <Card 
-      className="glass-card hover:glass-card-hover transition-all duration-200"
+      className="bg-glass backdrop-blur-md border border-subtle hover:bg-glass-hover hover:border-subtle-hover hover:-translate-y-1 transition-all duration-200"
     >
       <CardBody className="p-6">
         {/* App Icon and Status */}

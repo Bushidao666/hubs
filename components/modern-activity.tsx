@@ -60,7 +60,7 @@ export function ModernActivity() {
   };
 
   return (
-    <Card className="glass-card">
+    <Card className="bg-glass backdrop-blur-md border border-subtle">
       <CardHeader className="pb-0 pt-6 px-6">
         <div className="flex items-center justify-between w-full">
           <h3 className="text-lg font-semibold">Recent Activity</h3>
