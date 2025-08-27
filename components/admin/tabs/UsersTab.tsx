@@ -11,6 +11,7 @@ import { Tooltip } from '@heroui/tooltip';
 import { Badge } from '@heroui/badge';
 import { Avatar } from '@heroui/avatar';
 import { ScrollShadow } from '@heroui/scroll-shadow';
+import { Pagination } from '@heroui/pagination';
 import { 
   Users, 
   Search, 
@@ -21,6 +22,8 @@ import {
   UserPlus,
   Shield,
   Clock,
+  ChevronLeft,
+  ChevronRight,
   MoreVertical
 } from 'lucide-react';
 
@@ -31,41 +34,79 @@ export function UsersTab() {
   const [openCreate, setOpenCreate] = React.useState(false);
   const [createEmail, setCreateEmail] = React.useState('');
   const [createName, setCreateName] = React.useState('');
+  
+  // Estados de paginação
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [totalPages, setTotalPages] = React.useState(1);
+  const [totalUsers, setTotalUsers] = React.useState(0);
+  const [perPage] = React.useState(50); // Usuários por página
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (page: number = 1, searchQuery: string = q) => {
     setLoading(true);
-    const resp = await fetch(`/api/admin/users/list?q=${encodeURIComponent(q)}`);
-    const data = await resp.json();
-    setRows(data.users || []);
-    setLoading(false);
+    try {
+      const resp = await fetch(`/api/admin/users/list?page=${page}&perPage=${perPage}&q=${encodeURIComponent(searchQuery)}`);
+      const data = await resp.json();
+      
+      if (resp.ok) {
+        setRows(data.users || []);
+        setTotalPages(data.totalPages || 1);
+        setTotalUsers(data.totalUsers || 0);
+        setCurrentPage(page);
+      } else {
+        console.error('Error fetching users:', data.error);
+        setRows([]);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  React.useEffect(() => { fetchUsers(); }, []);
+  React.useEffect(() => { 
+    fetchUsers(1, ''); 
+  }, []);
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchUsers(1, q);
+  };
+
+  const handlePageChange = (page: number) => {
+    fetchUsers(page, q);
+  };
 
   const createUser = async () => {
     const resp = await fetch('/api/admin/users/create', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: createEmail, full_name: createName, sendInvite: true })
     });
     if (resp.ok) {
       setOpenCreate(false);
-      setCreateEmail(''); setCreateName('');
-      await fetchUsers();
+      setCreateEmail(''); 
+      setCreateName('');
+      await fetchUsers(currentPage, q);
     }
   };
 
   const removeUser = async (id: string) => {
     if (!confirm('Remover este usuário?')) return;
     const resp = await fetch('/api/admin/users/delete', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: id })
     });
-    if (resp.ok) await fetchUsers();
+    if (resp.ok) {
+      await fetchUsers(currentPage, q);
+    }
   };
 
   const inviteUser = async (email: string) => {
     await fetch('/api/admin/users/invite', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
     });
   };
@@ -85,10 +126,11 @@ export function UsersTab() {
       };
     }).filter(u => u.email);
     await fetch('/api/admin/users/import', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ users })
     });
-    await fetchUsers();
+    await fetchUsers(currentPage, q);
   };
 
   return (
@@ -102,7 +144,10 @@ export function UsersTab() {
             </div>
             <div>
               <h3 className="text-lg font-semibold">Gerenciar Usuários</h3>
-              <p className="text-sm text-default-500">Total: {rows.length} usuários</p>
+              <p className="text-sm text-default-500">
+                Total: {totalUsers} usuários
+                {q && ` (filtrado)`}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -123,12 +168,13 @@ export function UsersTab() {
                 placeholder="Buscar por email ou nome" 
                 value={q} 
                 onValueChange={setQ}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 startContent={<Search className="w-4 h-4 text-default-400" />}
                 className="max-w-xs"
                 size="sm"
               />
               <Button 
-                onPress={fetchUsers} 
+                onPress={handleSearch} 
                 isLoading={loading}
                 variant="flat"
                 size="sm"
@@ -186,10 +232,15 @@ export function UsersTab() {
                         <Avatar 
                           size="sm" 
                           name={u.email?.charAt(0).toUpperCase()}
-                          className="bg-primary/20 text-primary"
+                          className={u.isAdmin ? "bg-danger/20 text-danger" : "bg-primary/20 text-primary"}
                         />
                         <div>
-                          <p className="font-medium">{u.email}</p>
+                          <p className="font-medium flex items-center gap-2">
+                            {u.email}
+                            {u.isAdmin && (
+                              <Badge color="danger" content="Admin" size="sm" />
+                            )}
+                          </p>
                           <p className="text-xs text-default-500">
                             {u.user_metadata?.full_name || u.profile?.full_name || u.profile?.name || 'Sem nome'}
                           </p>
@@ -207,8 +258,8 @@ export function UsersTab() {
                     </TableCell>
                     <TableCell>
                       <Badge 
-                        content={u.profile?.role || u.app_metadata?.role || 'user'} 
-                        color={u.profile?.role === 'admin' ? 'danger' : 'default'}
+                        content={u.isAdmin ? 'admin' : (u.profile?.role || u.app_metadata?.role || 'user')} 
+                        color={u.isAdmin ? 'danger' : 'default'}
                         variant="flat"
                         size="sm"
                       />
@@ -231,6 +282,19 @@ export function UsersTab() {
                             <Mail className="w-4 h-4" />
                           </Button>
                         </Tooltip>
+                        {u.isAdmin && (
+                          <Tooltip content="Administrador">
+                            <Button 
+                              isIconOnly
+                              size="sm" 
+                              variant="light"
+                              color="danger"
+                              isDisabled
+                            >
+                              <Shield className="w-4 h-4" />
+                            </Button>
+                          </Tooltip>
+                        )}
                         <Tooltip content="Remover usuário" color="danger">
                           <Button 
                             isIconOnly
@@ -238,6 +302,7 @@ export function UsersTab() {
                             color="danger" 
                             variant="light" 
                             onPress={() => removeUser(u.id)}
+                            isDisabled={u.isAdmin}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -249,6 +314,51 @@ export function UsersTab() {
               </TableBody>
             </Table>
           </ScrollShadow>
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center mt-4 px-2">
+              <p className="text-sm text-default-500">
+                Página {currentPage} de {totalPages} • {totalUsers} usuários no total
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="flat"
+                  isIconOnly
+                  onPress={() => handlePageChange(currentPage - 1)}
+                  isDisabled={currentPage === 1 || loading}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                
+                <Pagination
+                  total={totalPages}
+                  page={currentPage}
+                  onChange={handlePageChange}
+                  size="sm"
+                  color="primary"
+                  variant="flat"
+                  showControls={false}
+                  classNames={{
+                    wrapper: "gap-1",
+                    item: "bg-transparent",
+                    cursor: "bg-primary"
+                  }}
+                />
+                
+                <Button
+                  size="sm"
+                  variant="flat"
+                  isIconOnly
+                  onPress={() => handlePageChange(currentPage + 1)}
+                  isDisabled={currentPage === totalPages || loading}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardBody>
       </Card>
 

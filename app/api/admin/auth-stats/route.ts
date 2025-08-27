@@ -58,30 +58,33 @@ export async function GET() {
       const todayISO = startOfToday.toISOString();
       // total_users via hub_profiles (ou user_access distinct)
       try {
-        let { count } = await supa.from('hub.hub_profiles').select('id', { count: 'exact', head: true });
+        let { count } = await supa.schema('hub').from('hub_profiles').select('id', { count: 'exact', head: true });
         if (!count) {
-          const r2 = await supa.from('hub.user_access').select('user_id', { count: 'exact', head: true });
+          const r2 = await supa.schema('hub').from('user_access').select('user_id', { count: 'exact', head: true });
           count = r2.count || 0;
         }
         total_users = count || 0;
       } catch {}
       try {
         const { count } = await supa
-          .from('hub.hub_profiles')
+          .schema('hub')
+          .from('hub_profiles')
           .select('id', { count: 'exact', head: true })
           .gte('created_at', todayISO);
         new_users_today = count || 0;
       } catch {}
       try {
         const { count } = await supa
-          .from('hub.hub_profiles')
+          .schema('hub')
+          .from('hub_profiles')
           .select('id', { count: 'exact', head: true })
           .gte('created_at', weekAgoISO);
         new_users_week = count || 0;
       } catch {}
       try {
         const { count } = await supa
-          .from('hub.user_access')
+          .schema('hub')
+          .from('user_access')
           .select('user_id', { count: 'exact', head: true })
           .eq('status', 'active');
         // aprox.: usuários ativos = usuários com acesso ativo
@@ -90,14 +93,16 @@ export async function GET() {
       try {
         const fiveMinAgoISO = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
         const { count } = await supa
-          .from('hub.sso_tickets')
+          .schema('hub')
+          .from('sso_tickets')
           .select('user_id', { count: 'exact', head: true })
           .gte('issued_at', fiveMinAgoISO);
         online_now = count || 0;
       } catch {}
       try {
         const { data } = await supa
-          .from('hub.hub_profiles')
+          .schema('hub')
+          .from('hub_profiles')
           .select('id, email, created_at')
           .order('created_at', { ascending: false })
           .limit(20);
@@ -111,7 +116,8 @@ export async function GET() {
     let active_subscriptions = 0;
     try {
       const { count } = await supa
-        .from('hub.user_access')
+        .schema('hub')
+        .from('user_access')
         .select('id', { count: 'exact', head: true })
         .eq('status', 'active');
       active_subscriptions = count || 0;

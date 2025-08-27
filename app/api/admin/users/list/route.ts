@@ -9,83 +9,150 @@ export async function GET(req: Request) {
     if (!HUB_URL || !HUB_SERVICE_ROLE_KEY) {
       return NextResponse.json({ error: 'Missing HUB_URL or HUB_SERVICE_ROLE_KEY' }, { status: 500 });
     }
+    
     const { searchParams } = new URL(req.url);
     const page = Number(searchParams.get('page') || '1');
     const perPage = Number(searchParams.get('perPage') || '50');
     const q = (searchParams.get('q') || '').toLowerCase();
-
+    
     const supa = createClient(HUB_URL, HUB_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
-    const { data, error } = await supa.auth.admin.listUsers({ page, perPage });
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    let users = data.users || [];
-
-    // IDs para buscar perfis/acessos
-    const ids = users.map(u => u.id);
-
+    
+    // Buscar TODOS os usuários primeiro para ter o total real
+    let allUsers: any[] = [];
+    let currentPage = 1;
+    const batchSize = 1000; // Máximo permitido pela API do Supabase
+    
+    // Loop para buscar todos os usuários
+    while (true) {
+      const { data, error } = await supa.auth.admin.listUsers({ 
+        page: currentPage, 
+        perPage: batchSize 
+      });
+      
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+      
+      const batch = data.users || [];
+      allUsers.push(...batch);
+      
+      // Se recebemos menos que o batch size, não há mais usuários
+      if (batch.length < batchSize) {
+        break;
+      }
+      
+      currentPage++;
+    }
+    
+    // Aplicar filtro de busca se houver
+    if (q) {
+      allUsers = allUsers.filter(u =>
+        (u.email?.toLowerCase().includes(q)) ||
+        ((u.user_metadata?.full_name || '').toLowerCase().includes(q))
+      );
+    }
+    
+    // Total de usuários após filtro
+    const totalUsers = allUsers.length;
+    const totalPages = Math.ceil(totalUsers / perPage);
+    
+    // Calcular índices para paginação
+    const startIndex = (page - 1) * perPage;
+    const endIndex = startIndex + perPage;
+    
+    // Pegar apenas os usuários da página atual
+    const pageUsers = allUsers.slice(startIndex, endIndex);
+    
+    // IDs dos usuários da página atual para buscar dados adicionais
+    const ids = pageUsers.map(u => u.id);
+    
     // Enriquecer com hub_profiles
     let profiles: any[] = [];
-    try {
-      const { data: prof, error: e } = await supa
-        .from('hub.hub_profiles')
-        .select('id, full_name, plan, role, email')
-        .in('id', ids);
-      if (!e && prof) profiles = prof;
-    } catch {}
-    const map: Record<string, any> = Object.fromEntries((profiles||[]).map(p => [p.id, p]));
-
-    // Primeiro: tentar hub.user_access (fonte canônica)
-    let accessByUser: Record<string, any> = {};
-    try {
-      const { data: ua, error: eua } = await supa
-        .from('hub.user_access')
-        .select('user_id, app_id, subscription_tier, status')
-        .in('user_id', ids);
-      if (!eua && Array.isArray(ua)) {
-        for (const r of ua) {
-          const uid = r.user_id;
-          if (!accessByUser[uid]) accessByUser[uid] = { total: 0, active: 0, tiers: {}, items: [] as any[] };
-          accessByUser[uid].total += 1;
-          if ((r.status || 'active') === 'active') accessByUser[uid].active += 1;
-          const t = r.subscription_tier || 'unknown';
-          accessByUser[uid].tiers[t] = (accessByUser[uid].tiers[t] || 0) + 1;
-          if (accessByUser[uid].items.length < 10) {
-            accessByUser[uid].items.push({ app_id: r.app_id, tier: r.subscription_tier, status: r.status });
-          }
-        }
-      }
-    } catch {}
-
-    // Fallback: view hub.v_user_app_access (se existir)
-    if (Object.keys(accessByUser).length === 0) {
+    if (ids.length > 0) {
       try {
-        let res = await supa.from('hub.v_user_app_access').select('*').in('user_id', ids);
-        if (res.error) { res = await supa.from('hub.v_user_app_access').select('*').in('id', ids); }
-        if (!res.error && Array.isArray(res.data)) {
-          for (const r of res.data as any[]) {
-            const uid = r.user_id || r.id;
-            if (!uid) continue;
-            if (!accessByUser[uid]) accessByUser[uid] = { total: 0, active: 0, tiers: {}, items: [] as any[] };
-            accessByUser[uid].total = r.total_apps || accessByUser[uid].total || 0;
-            accessByUser[uid].active = r.active_apps || accessByUser[uid].active || 0;
-            // tiers podem não estar na view; manter vazio
+        const { data: prof, error: e } = await supa
+          .schema('hub')
+          .from('hub_profiles')
+          .select('id, full_name, plan, role, email')
+          .in('id', ids);
+        if (!e && prof) profiles = prof;
+      } catch {}
+    }
+    const profileMap: Record<string, any> = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+    
+    // Buscar informações de acesso dos usuários
+    let accessByUser: Record<string, any> = {};
+    if (ids.length > 0) {
+      try {
+        const { data: ua, error: eua } = await supa
+          .schema('hub')
+          .from('user_access')
+          .select('user_id, app_id, subscription_tier, status')
+          .in('user_id', ids);
+          
+        if (!eua && Array.isArray(ua)) {
+          for (const r of ua) {
+            const uid = r.user_id;
+            if (!accessByUser[uid]) {
+              accessByUser[uid] = { 
+                total: 0, 
+                active: 0, 
+                tiers: {}, 
+                items: [] as any[] 
+              };
+            }
+            accessByUser[uid].total += 1;
+            if ((r.status || 'active') === 'active') {
+              accessByUser[uid].active += 1;
+            }
+            const tier = r.subscription_tier || 'unknown';
+            accessByUser[uid].tiers[tier] = (accessByUser[uid].tiers[tier] || 0) + 1;
+            if (accessByUser[uid].items.length < 10) {
+              accessByUser[uid].items.push({ 
+                app_id: r.app_id, 
+                tier: r.subscription_tier, 
+                status: r.status 
+              });
+            }
           }
         }
       } catch {}
     }
-
-    users = users.map(u => ({ ...u, profile: map[u.id] || null, access: accessByUser[u.id] || null }));
-
-    if (q) {
-      users = users.filter(u =>
-        (u.email?.toLowerCase().includes(q)) ||
-        ((u.user_metadata?.full_name || '').toLowerCase().includes(q)) ||
-        ((u.profile?.full_name || '').toLowerCase().includes(q))
-      );
+    
+    // Verificar se são admins
+    let adminIds: Set<string> = new Set();
+    if (ids.length > 0) {
+      try {
+        const { data: admins, error: adminsError } = await supa
+          .schema('hub')
+          .from('admins')
+          .select('user_id')
+          .in('user_id', ids);
+          
+        if (!adminsError && admins) {
+          admins.forEach(a => adminIds.add(a.user_id));
+        }
+      } catch {}
     }
-    return NextResponse.json({ users, page, perPage });
+    
+    // Enriquecer usuários com todas as informações
+    const enrichedUsers = pageUsers.map(u => ({
+      ...u,
+      profile: profileMap[u.id] || null,
+      access: accessByUser[u.id] || null,
+      isAdmin: adminIds.has(u.id)
+    }));
+    
+    return NextResponse.json({ 
+      users: enrichedUsers, 
+      page, 
+      perPage,
+      totalUsers,
+      totalPages,
+      hasMore: page < totalPages
+    });
+    
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'list failed' }, { status: 500 });
   }
 }
-
-

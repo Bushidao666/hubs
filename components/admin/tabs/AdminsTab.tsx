@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-import { supabase } from '@/lib/supabaseClient';
 import { Card, CardBody, CardHeader } from '@heroui/card';
 import { Button } from '@heroui/button';
 import { Input } from '@heroui/input';
@@ -28,14 +27,27 @@ export function AdminsTab() {
   const [email, setEmail] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [success, setSuccess] = React.useState<string | null>(null);
 
   const fetchAdmins = async () => {
     setLoading(true); 
     setError(null);
-    const { data, error } = await supabase.rpc('hub_admin_list_admins');
-    setLoading(false);
-    if (error) setError(error.message);
-    setItems(data || []);
+    try {
+      const response = await fetch('/api/admin/admins/list');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setItems(data.admins || []);
+      } else {
+        setError(data.error || 'Erro ao carregar administradores');
+        setItems([]);
+      }
+    } catch (err) {
+      setError('Erro ao carregar administradores');
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   React.useEffect(() => { 
@@ -45,26 +57,71 @@ export function AdminsTab() {
   const addAdmin = async () => {
     setLoading(true); 
     setError(null);
-    const { error } = await supabase.rpc('admin_add', { 
-      p_email: email.trim().toLowerCase() 
-    });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-    } else {
-      setEmail('');
-      await fetchAdmins();
+    setSuccess(null);
+    
+    try {
+      const response = await fetch('/api/admin/admins/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          email: email.trim().toLowerCase() 
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setSuccess(`Administrador ${email} adicionado com sucesso!`);
+        setEmail('');
+        await fetchAdmins();
+        // Limpar mensagem de sucesso após 3 segundos
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        setError(data.error || 'Erro ao adicionar administrador');
+      }
+    } catch (err) {
+      setError('Erro ao adicionar administrador');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const removeAdmin = async (mail: string) => {
-    if (!confirm(`Remover administrador: ${mail}?`)) return;
+  const removeAdmin = async (adminEmail: string, userId: string) => {
+    if (!confirm(`Remover administrador: ${adminEmail}?`)) return;
+    
     setLoading(true); 
     setError(null);
-    const { error } = await supabase.rpc('admin_remove', { p_email: mail });
-    setLoading(false);
-    if (error) setError(error.message);
-    await fetchAdmins();
+    setSuccess(null);
+    
+    try {
+      const response = await fetch('/api/admin/admins/remove', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          email: adminEmail,
+          user_id: userId 
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setSuccess(`Administrador ${adminEmail} removido com sucesso!`);
+        await fetchAdmins();
+        // Limpar mensagem de sucesso após 3 segundos
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        setError(data.error || 'Erro ao remover administrador');
+      }
+    } catch (err) {
+      setError('Erro ao remover administrador');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatDate = (date?: string) => {
@@ -101,6 +158,7 @@ export function AdminsTab() {
               placeholder="admin@exemplo.com"
               value={email} 
               onValueChange={setEmail}
+              onKeyPress={(e) => e.key === 'Enter' && email && addAdmin()}
               startContent={<Mail className="w-4 h-4 text-default-400" />}
               className="flex-1"
               classNames={{
@@ -126,6 +184,15 @@ export function AdminsTab() {
               </div>
             </div>
           )}
+          
+          {success && (
+            <div className="mt-3 p-3 bg-success/10 border border-success/30 rounded-lg">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-success" />
+                <p className="text-sm text-success">{success}</p>
+              </div>
+            </div>
+          )}
         </CardBody>
       </Card>
 
@@ -136,7 +203,7 @@ export function AdminsTab() {
         </CardHeader>
         <CardBody>
           <ScrollShadow className="h-[500px]">
-            {loading && (
+            {loading && items.length === 0 && (
               <div className="text-center py-8 text-default-500">
                 Carregando...
               </div>
@@ -149,7 +216,7 @@ export function AdminsTab() {
               </div>
             )}
 
-            {!loading && items.length > 0 && (
+            {items.length > 0 && (
               <Table 
                 removeWrapper
                 aria-label="Administradores"
@@ -162,7 +229,7 @@ export function AdminsTab() {
                   <TableColumn>USUÁRIO</TableColumn>
                   <TableColumn>STATUS</TableColumn>
                   <TableColumn>ÚLTIMO LOGIN</TableColumn>
-                  <TableColumn>DESDE</TableColumn>
+                  <TableColumn>ADMIN DESDE</TableColumn>
                   <TableColumn>AÇÕES</TableColumn>
                 </TableHeader>
                 <TableBody>
@@ -220,7 +287,7 @@ export function AdminsTab() {
                       <TableCell>
                         <div className="flex items-center gap-2 text-xs text-default-500">
                           <Calendar className="w-3 h-3" />
-                          {formatDate(admin.created_at)}
+                          {formatDate(admin.admin_since)}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -230,7 +297,8 @@ export function AdminsTab() {
                             size="sm" 
                             variant="light" 
                             color="danger" 
-                            onPress={() => removeAdmin(admin.email)}
+                            onPress={() => removeAdmin(admin.email, admin.user_id)}
+                            isDisabled={loading}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -257,6 +325,7 @@ export function AdminsTab() {
                 <li>Podem gerenciar usuários, aplicações, banners e avisos</li>
                 <li>Tenha cuidado ao adicionar novos administradores</li>
                 <li>Remover um administrador não exclui a conta do usuário</li>
+                <li>O sistema não permite remover o último administrador</li>
               </ul>
             </div>
           </div>

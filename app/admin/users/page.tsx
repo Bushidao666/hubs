@@ -14,16 +14,24 @@ export default function AdminUsersPage() {
   const [openCreate, setOpenCreate] = React.useState(false);
   const [createEmail, setCreateEmail] = React.useState('');
   const [createName, setCreateName] = React.useState('');
+  const [page, setPage] = React.useState(1);
+  const [perPage, setPerPage] = React.useState(50);
+  const [totalUsers, setTotalUsers] = React.useState(0);
+  const [totalPages, setTotalPages] = React.useState(1);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (targetPage?: number) => {
     setLoading(true);
-    const resp = await fetch(`/api/admin/users/list?q=${encodeURIComponent(q)}`);
+    const currentPage = targetPage ?? page;
+    const resp = await fetch(`/api/admin/users/list?page=${currentPage}&perPage=${perPage}&q=${encodeURIComponent(q)}`);
     const data = await resp.json();
     setRows(data.users || []);
+    if (typeof data.totalUsers === 'number') setTotalUsers(data.totalUsers);
+    if (typeof data.totalPages === 'number') setTotalPages(data.totalPages);
+    setPage(currentPage);
     setLoading(false);
   };
 
-  React.useEffect(() => { fetchUsers(); }, []);
+  React.useEffect(() => { fetchUsers(1); }, []);
 
   const createUser = async () => {
     const resp = await fetch('/api/admin/users/create', {
@@ -33,7 +41,7 @@ export default function AdminUsersPage() {
     if (resp.ok) {
       setOpenCreate(false);
       setCreateEmail(''); setCreateName('');
-      await fetchUsers();
+      await fetchUsers(page);
     }
   };
 
@@ -43,7 +51,7 @@ export default function AdminUsersPage() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: id })
     });
-    if (resp.ok) await fetchUsers();
+    if (resp.ok) await fetchUsers(page);
   };
 
   const inviteUser = async (email: string) => {
@@ -80,8 +88,14 @@ export default function AdminUsersPage() {
       <Card>
         <CardBody className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <Input placeholder="Buscar por email ou nome" value={q} onValueChange={setQ} className="w-64" />
-            <Button onPress={fetchUsers} isLoading={loading}>Buscar</Button>
+            <Input 
+              placeholder="Buscar por email ou nome" 
+              value={q} 
+              onValueChange={setQ} 
+              onKeyDown={(e)=>{ if (e.key === 'Enter') fetchUsers(1); }}
+              className="w-64" 
+            />
+            <Button onPress={()=>fetchUsers(1)} isLoading={loading}>Buscar</Button>
           </div>
           <div className="flex items-center gap-2">
             <input type="file" accept=".csv" onChange={(e)=>onImportCsv(e.target.files?.[0])} />
@@ -115,6 +129,32 @@ export default function AdminUsersPage() {
           ))}
         </TableBody>
       </Table>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between pt-2">
+        <div className="text-sm text-default-500">
+          Página {page} de {Math.max(totalPages, 1)} • {totalUsers} usuários
+        </div>
+        <div className="flex items-center gap-2">
+          <Button 
+            size="sm" 
+            variant="flat" 
+            isDisabled={loading || page <= 1}
+            onPress={()=>fetchUsers(page - 1)}
+          >
+            Anterior
+          </Button>
+          <Button 
+            size="sm" 
+            color="primary" 
+            variant="flat" 
+            isDisabled={loading || page >= totalPages}
+            onPress={()=>fetchUsers(page + 1)}
+          >
+            Próxima
+          </Button>
+        </div>
+      </div>
 
       <Modal isOpen={openCreate} onOpenChange={setOpenCreate}>
         <ModalContent>

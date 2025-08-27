@@ -5,14 +5,33 @@ import { Avatar } from '@heroui/avatar';
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/dropdown';
 import { Button } from '@heroui/button';
 import { Badge } from '@heroui/badge';
-import { useRouter } from 'next/navigation';
+import { Tabs, Tab } from '@heroui/tabs';
+import { useRouter, usePathname } from 'next/navigation';
 import { fetchUserProfile } from '@/lib/userProfile';
-import { Bell, Settings, Search, Menu, Home, Grid3X3, BarChart3, Users } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
+import { 
+  Bell, Settings, Search, Menu, Home, Grid3X3, BarChart3, Users,
+  Shield, Database, Upload, Image as ImageIcon, Activity
+} from 'lucide-react';
 
 export function ModernHeader() {
   const router = useRouter();
+  const pathname = usePathname();
   const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
   const [displayName, setDisplayName] = React.useState<string>('Usuário');
+  const [isAdmin, setIsAdmin] = React.useState(false);
+  const [selectedTab, setSelectedTab] = React.useState('dashboard');
+
+  React.useEffect(() => {
+    // Set selected tab based on current path
+    if (pathname === '/admin') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tab = urlParams.get('tab');
+      setSelectedTab(tab || 'overview');
+    } else {
+      setSelectedTab('dashboard');
+    }
+  }, [pathname]);
 
   React.useEffect(()=>{
     (async ()=>{
@@ -21,8 +40,21 @@ export function ModernHeader() {
         setAvatarUrl(profile.avatarUrl);
         setDisplayName(profile.name || 'Usuário');
       }
+      
+      // Check if user is admin
+      const { data: adminFlag } = await supabase.rpc('hub_is_admin');
+      setIsAdmin(!!adminFlag);
     })();
   },[]);
+
+  const handleTabChange = (key: React.Key) => {
+    const tabKey = key.toString();
+    if (tabKey === 'dashboard') {
+      router.push('/');
+    } else {
+      router.push(`/admin?tab=${tabKey}`);
+    }
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-divider">
@@ -38,20 +70,96 @@ export function ModernHeader() {
             <h1 className="text-xl font-semibold">Hub</h1>
           </div>
           
-          <nav className="hidden">
-            <Button variant="light" size="sm" startContent={<Home size={16} />} className="text-default-600">
-              Dashboard
-            </Button>
-            <Button variant="light" size="sm" startContent={<Grid3X3 size={16} />} className="text-default-600">
-              Apps
-            </Button>
-            <Button variant="light" size="sm" startContent={<BarChart3 size={16} />} className="text-default-600">
-              Analytics
-            </Button>
-            <Button variant="light" size="sm" startContent={<Users size={16} />} className="text-default-600">
-              Team
-            </Button>
-          </nav>
+          {/* Admin Navigation Tabs */}
+          {isAdmin && (
+            <Tabs 
+              selectedKey={selectedTab}
+              onSelectionChange={handleTabChange}
+              aria-label="Admin navigation"
+              color="primary"
+              variant="underlined"
+              size="sm"
+              classNames={{
+                tabList: "gap-4",
+                cursor: "bg-primary",
+                tab: "h-12",
+                tabContent: "group-data-[selected=true]:text-primary"
+              }}
+            >
+              <Tab
+                key="dashboard"
+                title={
+                  <div className="flex items-center space-x-1">
+                    <Home className="w-4 h-4" />
+                    <span>Dashboard</span>
+                  </div>
+                }
+              />
+              <Tab
+                key="overview"
+                title={
+                  <div className="flex items-center space-x-1">
+                    <Activity className="w-4 h-4" />
+                    <span>Admin</span>
+                  </div>
+                }
+              />
+              <Tab
+                key="apps"
+                title={
+                  <div className="flex items-center space-x-1">
+                    <Database className="w-4 h-4" />
+                    <span>Apps</span>
+                  </div>
+                }
+              />
+              <Tab
+                key="users"
+                title={
+                  <div className="flex items-center space-x-1">
+                    <Users className="w-4 h-4" />
+                    <span>Usuários</span>
+                  </div>
+                }
+              />
+              <Tab
+                key="notices"
+                title={
+                  <div className="flex items-center space-x-1">
+                    <Bell className="w-4 h-4" />
+                    <span>Avisos</span>
+                  </div>
+                }
+              />
+              <Tab
+                key="banners"
+                title={
+                  <div className="flex items-center space-x-1">
+                    <ImageIcon className="w-4 h-4" />
+                    <span>Banners</span>
+                  </div>
+                }
+              />
+              <Tab
+                key="import"
+                title={
+                  <div className="flex items-center space-x-1">
+                    <Upload className="w-4 h-4" />
+                    <span>Importar</span>
+                  </div>
+                }
+              />
+              <Tab
+                key="admins"
+                title={
+                  <div className="flex items-center space-x-1">
+                    <Shield className="w-4 h-4" />
+                    <span>Admins</span>
+                  </div>
+                }
+              />
+            </Tabs>
+          )}
         </div>
 
         {/* Right Section - Actions & User */}
@@ -90,13 +198,33 @@ export function ModernHeader() {
               <DropdownItem key="profile" className="h-14 gap-2">
                 <p className="font-semibold">{displayName}</p>
               </DropdownItem>
-              <DropdownItem key="settings" startContent={<Settings size={16} />}>
+              {isAdmin ? (
+                <DropdownItem 
+                  key="admin" 
+                  startContent={<Shield size={16} />}
+                  onPress={() => router.push('/admin')}
+                >
+                  Painel Admin
+                </DropdownItem>
+              ) : null}
+              <DropdownItem 
+                key="settings" 
+                startContent={<Settings size={16} />}
+                onPress={() => router.push('/settings')}
+              >
                 Configurações
               </DropdownItem>
               <DropdownItem key="team">Configurações da Equipe</DropdownItem>
               <DropdownItem key="analytics">Analytics</DropdownItem>
               <DropdownItem key="help">Ajuda & Feedback</DropdownItem>
-              <DropdownItem key="logout" color="danger">
+              <DropdownItem 
+                key="logout" 
+                color="danger"
+                onPress={async () => {
+                  await supabase.auth.signOut();
+                  router.push('/login');
+                }}
+              >
                 Sair
               </DropdownItem>
             </DropdownMenu>
