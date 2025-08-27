@@ -261,7 +261,7 @@ export default function AdminAppsPage() {
           </div>
         );
       default:
-        return getKeyValue(app, columnKey);
+        return getKeyValue(app, String(columnKey) as keyof AdminApp);
     }
   }, []);
 

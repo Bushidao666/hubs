@@ -148,7 +148,6 @@ export function useAdminMetrics() {
           maintenance_apps: prev?.maintenance_apps || 0,
           offline_apps: prev?.offline_apps || 0,
           total_user_access: prev?.total_user_access || 0,
-          active_subscriptions: prev?.active_subscriptions || 0,
           users_by_app: prev?.users_by_app || {},
           subscription_distribution: prev?.subscription_distribution || {},
           recent_users: j.recent_users || [],

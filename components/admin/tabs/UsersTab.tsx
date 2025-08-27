@@ -238,7 +238,7 @@ export function UsersTab() {
                           <p className="font-medium flex items-center gap-2">
                             {u.email}
                             {u.isAdmin && (
-                              <Badge color="danger" content="Admin" size="sm" />
+                              <Badge color="danger" size="sm">Admin</Badge>
                             )}
                           </p>
                           <p className="text-xs text-default-500">
@@ -258,11 +258,12 @@ export function UsersTab() {
                     </TableCell>
                     <TableCell>
                       <Badge 
-                        content={u.isAdmin ? 'admin' : (u.profile?.role || u.app_metadata?.role || 'user')} 
                         color={u.isAdmin ? 'danger' : 'default'}
                         variant="flat"
                         size="sm"
-                      />
+                      >
+                        {u.isAdmin ? 'admin' : (u.profile?.role || u.app_metadata?.role || 'user')}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1 text-xs text-default-500">

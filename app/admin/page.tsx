@@ -44,7 +44,7 @@ import { BannersTab } from '@/components/admin/tabs/BannersTab';
 import { ImportTab } from '@/components/admin/tabs/ImportTab';
 import { AdminsTab } from '@/components/admin/tabs/AdminsTab';
 
-export default function AdminDashboard() {
+function AdminDashboard() {
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'overview';
   
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
                 value={totalApps}
                 icon={Database}
                 progress={totalApps > 0 ? (onlineApps / totalApps) * 100 : 0}
-                change={stats?.online_apps > 0 ? Math.round((onlineApps / totalApps) * 100) : 0}
+                change={(stats?.online_apps ?? 0) > 0 ? Math.round((onlineApps / totalApps) * 100) : 0}
               />
               <StatCard 
                 title="Usuários Ativos" 
@@ -235,7 +235,7 @@ export default function AdminDashboard() {
                         <TableColumn>AÇÕES</TableColumn>
                       </TableHeader>
                       <TableBody>
-                        {realtimeMetrics?.apps_health && Object.entries(realtimeMetrics.apps_health).slice(0, 5).map(([slug, app]: [string, any]) => {
+                        {Object.entries(realtimeMetrics?.apps_health ?? {}).slice(0, 5).map(([slug, app]: [string, any]) => {
                           const railway = railwayMetrics[slug];
                           return (
                             <TableRow key={slug}>
@@ -544,5 +544,13 @@ export default function AdminDashboard() {
         )}
       </div>
     </AdminLayout>
+  );
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <React.Suspense fallback={<div className="p-6 text-default-500">Carregando...</div>}>
+      <AdminDashboard />
+    </React.Suspense>
   );
 }

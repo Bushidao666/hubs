@@ -284,11 +284,12 @@ export function BannersTab() {
                     
                     <div className="absolute top-2 right-2 z-10">
                       <Badge 
-                        content={`#${idx + 1}`} 
                         color="primary" 
                         variant="flat"
                         size="sm"
-                      />
+                      >
+                        #{idx + 1}
+                      </Badge>
                     </div>
 
                     <div className="aspect-video bg-content1">

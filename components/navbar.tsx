@@ -24,6 +24,7 @@ import {
   SearchIcon,
   Logo,
 } from "@/components/icons";
+import { ThemeSwitch } from "@/components/theme-switch";
 
 export const Navbar = () => {
   const searchInput = (
