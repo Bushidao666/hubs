@@ -17,10 +17,10 @@ export function ModernLoadingModal({ app, onClose }: ModernLoadingModalProps) {
   const [currentStep, setCurrentStep] = useState(0);
   
   const steps = [
-    'Authenticating user...',
-    'Loading application data...',
-    'Establishing connection...',
-    'Finalizing setup...'
+    'Autenticando usuário...',
+    'Carregando dados do aplicativo...',
+    'Estabelecendo conexão...',
+    'Finalizando configuração...'
   ];
 
   useEffect(() => {
@@ -79,7 +79,7 @@ export function ModernLoadingModal({ app, onClose }: ModernLoadingModalProps) {
             {/* Title */}
             <div>
               <h2 className="text-xl font-semibold mb-2">
-                Opening {app.name}
+                Abrindo {app.name}
               </h2>
               <p className="text-sm text-default-500">
                 {steps[currentStep]}

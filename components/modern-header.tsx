@@ -6,13 +6,26 @@ import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/d
 import { Button } from '@heroui/button';
 import { Badge } from '@heroui/badge';
 import { useRouter } from 'next/navigation';
+import { fetchUserProfile } from '@/lib/userProfile';
 import { Bell, Settings, Search, Menu, Home, Grid3X3, BarChart3, Users } from 'lucide-react';
 
 export function ModernHeader() {
   const router = useRouter();
+  const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
+  const [displayName, setDisplayName] = React.useState<string>('Usuário');
+
+  React.useEffect(()=>{
+    (async ()=>{
+      const profile = await fetchUserProfile();
+      if (profile) {
+        setAvatarUrl(profile.avatarUrl);
+        setDisplayName(profile.name || 'Usuário');
+      }
+    })();
+  },[]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-content1/80 backdrop-blur-xl border-b border-divider">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-divider">
       <div className="flex items-center justify-between px-6 h-16">
         {/* Left Section - Logo & Navigation */}
         <div className="flex items-center gap-8">
@@ -25,7 +38,7 @@ export function ModernHeader() {
             <h1 className="text-xl font-semibold">Hub</h1>
           </div>
           
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden">
             <Button variant="light" size="sm" startContent={<Home size={16} />} className="text-default-600">
               Dashboard
             </Button>
@@ -66,25 +79,25 @@ export function ModernHeader() {
                 as="button"
                 className="transition-transform"
                 size="sm"
-                src="https://i.pravatar.cc/150?u=a042581f4e29026024d"
+                src={avatarUrl || 'https://i.pravatar.cc/150?u=a042581f4e29026024d'}
+                name={displayName}
               />
             </DropdownTrigger>
             <DropdownMenu 
-              aria-label="User menu"
+              aria-label="Menu do usuário"
               className="w-56"
             >
               <DropdownItem key="profile" className="h-14 gap-2">
-                <p className="font-semibold">John Doe</p>
-                <p className="text-xs text-default-500">john@blacksider.hub</p>
+                <p className="font-semibold">{displayName}</p>
               </DropdownItem>
               <DropdownItem key="settings" startContent={<Settings size={16} />}>
-                Settings
+                Configurações
               </DropdownItem>
-              <DropdownItem key="team">Team Settings</DropdownItem>
+              <DropdownItem key="team">Configurações da Equipe</DropdownItem>
               <DropdownItem key="analytics">Analytics</DropdownItem>
-              <DropdownItem key="help">Help & Feedback</DropdownItem>
+              <DropdownItem key="help">Ajuda & Feedback</DropdownItem>
               <DropdownItem key="logout" color="danger">
-                Log Out
+                Sair
               </DropdownItem>
             </DropdownMenu>
           </Dropdown>

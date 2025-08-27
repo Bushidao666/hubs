@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Você foi convidado - SiderHub</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #0a0a0a;
+            color: #fafafa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .card {
+            background: #171717;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+        }
+        .logo {
+            margin-bottom: 30px;
+        }
+        .logo img {
+            height: 50px;
+            width: auto;
+        }
+        h1 {
+            color: #00ff00;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+        .invite-badge {
+            display: inline-block;
+            background: rgba(0, 255, 0, 0.1);
+            color: #00ff00;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 255, 0, 0.2);
+        }
+        .message {
+            color: #a1a1aa;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .button {
+            display: inline-block;
+            background: #00ff00;
+            color: #000000;
+            padding: 14px 32px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            transition: all 0.3s;
+        }
+        .button:hover {
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+        }
+        .footer {
+            margin-top: 40px;
+            color: #71717a;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #00ff00;
+            text-decoration: none;
+        }
+        .divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="logo">
+                <img src="{{ .SiteURL }}/BS_Vertical_branco_SEM_FUNDO.png" alt="SiderHub">
+            </div>
+            
+            <div class="invite-badge">CONVITE ESPECIAL</div>
+            
+            <h1>Você foi convidado para o SiderHub!</h1>
+            
+            <div class="message">
+                <p>Parabéns! Você recebeu um convite exclusivo para fazer parte do SiderHub.</p>
+                <p>Junte-se a nossa comunidade e descubra todas as ferramentas poderosas que preparamos para você.</p>
+            </div>
+            
+            <a href="{{ .ConfirmationURL }}" class="button">
+                Aceitar Convite
+            </a>
+            
+            <div class="divider"></div>
+            
+            <div class="footer">
+                <p>Este convite é intransferível e expira em 7 dias.</p>
+                <p>Precisa de ajuda? Entre em contato conosco em <a href="mailto:support@siderhub.com">support@siderhub.com</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

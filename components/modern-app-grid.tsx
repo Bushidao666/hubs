@@ -62,6 +62,19 @@ export function ModernAppGrid() {
 
   const categories = ['all', ...Array.from(new Set(apps.map(app => app.category)))];
 
+  const tCategory = (c: string) => {
+    switch (c) {
+      case 'Development': return 'Desenvolvimento';
+      case 'Security': return 'Segurança';
+      case 'Hardware': return 'Hardware';
+      case 'Monitoring': return 'Monitoramento';
+      case 'Templates': return 'Modelos';
+      case 'Integration': return 'Integração';
+      case 'Performance': return 'Desempenho';
+      default: return c;
+    }
+  };
+
   const filteredApps = apps.filter(app => {
     const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           app.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -76,9 +89,9 @@ export function ModernAppGrid() {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold">Applications</h1>
+              <h1 className="text-2xl font-semibold">Aplicativos</h1>
               <p className="text-default-500 mt-1">
-                Manage and access your integrated applications
+                Gerencie e acesse seus aplicativos integrados
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -104,28 +117,28 @@ export function ModernAppGrid() {
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-3">
             <Input
-              placeholder="Search applications..."
+              placeholder="Buscar aplicativos..."
               value={searchQuery}
               onValueChange={setSearchQuery}
               startContent={<Search size={16} />}
               className="flex-1"
               classNames={{
-                inputWrapper: "bg-content1 border border-divider"
+                inputWrapper: "bg-black/30 backdrop-blur-xl border-primary/20 hover:border-primary/40 focus-within:border-primary data-[hover=true]:bg-white/5"
               }}
             />
             <Select
-              placeholder="Category"
+              placeholder="Categoria"
               selectedKeys={[categoryFilter]}
               onSelectionChange={(keys) => setCategoryFilter(Array.from(keys)[0] as string)}
               startContent={<Filter size={16} />}
               className="w-full sm:w-48"
               classNames={{
-                trigger: "bg-content1 border border-divider"
+                trigger: "bg-black/30 backdrop-blur-xl border-primary/20 hover:border-primary/40 data-[hover=true]:bg-white/5"
               }}
             >
               {categories.map((category) => (
                 <SelectItem key={category}>
-                  {category === 'all' ? 'All Categories' : category}
+                  {category === 'all' ? 'Todas as categorias' : tCategory(category)}
                 </SelectItem>
               ))}
             </Select>
@@ -139,22 +152,34 @@ export function ModernAppGrid() {
               ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
               : 'grid-cols-1'
           }`}>
-            {filteredApps.map((app) => (
-              <ModernAppCard 
-                key={app.id} 
-                app={app} 
-                onClick={handleAppClick}
-              />
-            ))}
+            {filteredApps.map((app) => {
+              const comingSoonIds = new Set([
+                'hidra',
+                'radar-blacksider',
+                'hyper',
+                'siderlink',
+                'cybervault',
+                'sider-tools',
+              ]);
+              const comingSoon = comingSoonIds.has(app.id);
+              return (
+                <ModernAppCard 
+                  key={app.id} 
+                  app={app}
+                  comingSoon={comingSoon}
+                  onClick={handleAppClick}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="text-default-300 mb-4">
               <Search size={48} />
             </div>
-            <p className="text-default-500">No applications found</p>
+            <p className="text-default-500">Nenhum aplicativo encontrado</p>
             <p className="text-sm text-default-400 mt-1">
-              Try adjusting your search or filters
+              Tente ajustar sua busca ou filtros
             </p>
           </div>
         )}

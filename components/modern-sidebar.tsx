@@ -8,6 +8,7 @@ import { Chip } from '@heroui/chip';
 import { UserProfile } from '@/types/saas';
 import { Shield, Zap, TrendingUp, Cpu } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { fetchUserProfile } from '@/lib/userProfile';
 
 interface ModernSidebarProps {
   user?: UserProfile;
@@ -16,25 +17,17 @@ interface ModernSidebarProps {
 export function ModernSidebar({ user }: ModernSidebarProps) {
   const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
   const [email, setEmail] = React.useState<string>('');
-  const [name, setName] = React.useState<string>('User');
+  const [name, setName] = React.useState<string>('Usuário');
   const [tier, setTier] = React.useState<string>('pro');
 
   React.useEffect(() => {
     const load = async () => {
-      const { data: session } = await supabase.auth.getSession();
-      const uid = session.session?.user.id;
-      const uemail = session.session?.user.email || '';
-      setEmail(uemail || 'user@blacksider.hub');
-      setName(uemail?.split('@')[0] || 'User');
-      if (!uid) return;
-      try {
-        const list = await supabase.storage.from('avatars').list(uid, { limit: 1 });
-        const file = list.data?.[0]?.name;
-        if (file) {
-          const { data: url } = supabase.storage.from('avatars').getPublicUrl(`${uid}/${file}`);
-          setAvatarUrl(url.publicUrl);
-        }
-      } catch {}
+      const profile = await fetchUserProfile();
+      if (profile) {
+        setEmail(profile.email || '');
+        setName(profile.name || 'Usuário');
+        setAvatarUrl(profile.avatarUrl);
+      }
     };
     load();
   }, []);
@@ -65,7 +58,7 @@ export function ModernSidebar({ user }: ModernSidebarProps) {
   };
 
   return (
-    <aside className="w-full h-full bg-content1 border-r border-divider overflow-y-auto">
+    <aside className="w-full h-full bg-black/90 border-r border-divider overflow-y-auto">
       <div className="p-6 space-y-6">
         {/* User Profile Card */}
         <Card className="bg-glass backdrop-blur-md border border-subtle">
@@ -93,7 +86,7 @@ export function ModernSidebar({ user }: ModernSidebarProps) {
                     color={currentUser.tier === 'pro' ? 'primary' : 'default'}
                     variant="flat"
                   >
-                    {currentUser.tier.toUpperCase()} PLAN
+                    PLANO {currentUser.tier.toUpperCase()}
                   </Chip>
                 </div>
               </div>
@@ -106,14 +99,14 @@ export function ModernSidebar({ user }: ModernSidebarProps) {
                 variant="flat"
                 size="sm"
               >
-                Account Settings
+                Configurações da Conta
               </Button>
               <Button 
                 fullWidth 
                 variant="light"
                 size="sm"
               >
-                Upgrade Plan
+                Fazer Upgrade do Plano
               </Button>
             </div>
           </CardBody>

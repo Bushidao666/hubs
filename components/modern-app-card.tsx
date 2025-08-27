@@ -13,9 +13,10 @@ import { supabase } from '@/lib/supabaseClient';
 interface ModernAppCardProps {
   app: SaaSApp;
   onClick: (app: SaaSApp) => void;
+  comingSoon?: boolean;
 }
 
-export function ModernAppCard({ app, onClick }: ModernAppCardProps) {
+export function ModernAppCard({ app, onClick, comingSoon = false }: ModernAppCardProps) {
   const [available, setAvailable] = useState<boolean>(true);
   const [status, setStatus] = useState<string>('online');
   const [enabled, setEnabled] = useState<boolean>(true);
@@ -43,9 +44,22 @@ export function ModernAppCard({ app, onClick }: ModernAppCardProps) {
 
   const { icon: AppIcon, color } = getAppIcon(app.id);
 
+  const tCategory = (c: string) => {
+    switch (c) {
+      case 'Development': return 'Desenvolvimento';
+      case 'Security': return 'Segurança';
+      case 'Hardware': return 'Hardware';
+      case 'Monitoring': return 'Monitoramento';
+      case 'Templates': return 'Modelos';
+      case 'Integration': return 'Integração';
+      case 'Performance': return 'Desempenho';
+      default: return c;
+    }
+  };
+
   return (
     <Card 
-      className="bg-glass backdrop-blur-md border border-subtle hover:bg-glass-hover hover:border-subtle-hover hover:-translate-y-1 transition-all duration-200"
+      className="relative bg-glass backdrop-blur-md border border-subtle hover:bg-glass-hover hover:border-subtle-hover hover:-translate-y-1 transition-all duration-200"
     >
       <CardBody className="p-6">
         {/* App Icon and Status */}
@@ -106,20 +120,28 @@ export function ModernAppCard({ app, onClick }: ModernAppCardProps) {
       <CardFooter className="px-6 py-3 border-t border-divider">
         <div className="flex items-center justify-between w-full">
           <span className="text-xs text-default-400">
-            {app.category}
+            {tCategory(app.category)}
           </span>
           <Button 
             size="sm" 
-            variant={available && enabled ? 'light' : 'flat'}
-            isDisabled={!available || !enabled || status !== 'online'}
+            variant={comingSoon ? 'flat' : (available && enabled ? 'light' : 'flat')}
+            isDisabled={comingSoon || !available || !enabled || status !== 'online'}
             endContent={<ArrowUpRight size={14} />}
             className="text-primary"
-            onClick={() => available && enabled && status === 'online' && onClick(app)}
+            onClick={() => !comingSoon && available && enabled && status === 'online' && onClick(app)}
           >
-            {available && enabled && status === 'online' ? 'Open' : 'Unavailable'}
+            {comingSoon ? 'Em Breve' : (available && enabled && status === 'online' ? 'Abrir' : 'Indisponível')}
           </Button>
         </div>
       </CardFooter>
+
+      {comingSoon && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-large bg-black/60 backdrop-blur-sm">
+          <span className="px-4 py-2 rounded-md border border-primary/50 text-primary font-semibold uppercase tracking-widest bg-black/40">
+            Em Breve
+          </span>
+        </div>
+      )}
     </Card>
   );
 }

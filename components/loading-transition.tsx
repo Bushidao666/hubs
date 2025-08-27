@@ -15,11 +15,11 @@ interface LoadingTransitionProps {
 export function LoadingTransition({ app, onClose }: LoadingTransitionProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [steps, setSteps] = useState<LoadingStep[]>([
-    { id: '1', text: 'Verifying authentication...', status: 'processing' },
-    { id: '2', text: 'Granting permissions...', status: 'pending' },
-    { id: '3', text: 'Establishing neural link...', status: 'pending' },
-    { id: '4', text: 'Initializing interface...', status: 'pending' },
-    { id: '5', text: 'Synchronizing data streams...', status: 'pending' }
+    { id: '1', text: 'Verificando autenticação...', status: 'processing' },
+    { id: '2', text: 'Concedendo permissões...', status: 'pending' },
+    { id: '3', text: 'Estabelecendo link neural...', status: 'pending' },
+    { id: '4', text: 'Inicializando interface...', status: 'pending' },
+    { id: '5', text: 'Sincronizando fluxos de dados...', status: 'pending' }
   ]);
 
   useEffect(() => {
@@ -105,7 +105,7 @@ export function LoadingTransition({ app, onClose }: LoadingTransitionProps) {
           {/* Title */}
           <div className="space-y-2">
             <h2 className="text-2xl font-orbitron font-bold text-primary">
-              ESTABLISHING NEURAL LINK
+              ESTABELECENDO LINK NEURAL
             </h2>
             <p className="text-lg font-mono text-secondary">
               {app.name}
@@ -139,7 +139,7 @@ export function LoadingTransition({ app, onClose }: LoadingTransitionProps) {
               color="primary"
               className="font-mono text-xs bg-black/30 backdrop-blur-xl border border-primary/20"
             >
-              Progress: {Math.round((currentStep / steps.length) * 100)}%
+              Progresso: {Math.round((currentStep / steps.length) * 100)}%
             </Chip>
             <Chip
               size="sm"
@@ -147,7 +147,7 @@ export function LoadingTransition({ app, onClose }: LoadingTransitionProps) {
               color="secondary"
               className="font-mono text-xs animate-pulse bg-black/30 backdrop-blur-xl border border-secondary/20"
             >
-              Establishing Connection...
+              Estabelecendo conexão...
             </Chip>
           </div>
 
