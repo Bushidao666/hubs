@@ -14,7 +14,12 @@ export const metadata: Metadata = {
   },
   description: "Advanced Neural Interface for SaaS Management",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/BS%20Vertical%20branco%20SEM%20FUNDO.png", type: "image/png" }
+    ],
+    apple: [
+      { url: "/BS%20Vertical%20branco%20SEM%20FUNDO.png", type: "image/png" }
+    ],
   },
 };
 
