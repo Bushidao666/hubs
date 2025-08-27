@@ -18,45 +18,52 @@ async function main() {
   }
   const supa = createClient(url, key);
 
-  let page = 1;
-  const perPage = 1000;
-  let sent = 0;
-  let failed = 0;
-
+  // Coletar todos os usuários alvo primeiro
+  const all = [];
+  let page = 1; const perPage = 1000;
   while (true) {
     const { data, error } = await supa.auth.admin.listUsers({ page, perPage });
     if (error) throw error;
-    const batch = data.users || [];
-    if (batch.length === 0) break;
-
-    const targets = batch.filter(u => (u.user_metadata?.import_source === 'orders_csv'));
-    for (const u of targets) {
-      try {
-        const { error: e } = await supa.auth.signInWithOtp({
-          email: u.email,
-          options: {
-            // redirectTo: process.env.MAGIC_REDIRECT_TO || undefined,
-          }
-        });
-        if (e) {
-          failed++;
-          console.error('Falha ao enviar magic link para', u.email, e.message);
-        } else {
-          sent++;
-        }
-      } catch (err) {
-        failed++;
-        console.error('Exceção ao enviar magic link para', u.email, err?.message || err);
-      }
-      // Pausa curta para evitar burst
-      await sleep(75);
-    }
-
-    if (batch.length < perPage) break;
+    const users = data.users || [];
+    if (!users.length) break;
+    all.push(...users);
+    if (users.length < perPage) break;
     page++;
   }
 
-  console.log('Envio concluído', { sent, failed });
+  const pending = all.filter(u => u.user_metadata?.import_source === 'orders_csv' && !u.user_metadata?.magic_sent_at);
+  const rate = Number(process.env.RATE_PER_MINUTE || 12); // seguro: ~12/min
+  const interval = Math.ceil(60000 / Math.max(1, rate));
+  let sent = 0; let failed = 0; let idx = 0;
+  for (const u of pending) {
+    idx++;
+    try {
+      const { error: e } = await supa.auth.signInWithOtp({
+        email: u.email,
+        options: {
+          // redirectTo: process.env.MAGIC_REDIRECT_TO || undefined,
+        }
+      });
+      if (e) {
+        failed++;
+        console.error('Falha ao enviar magic link para', u.email, e.message);
+      } else {
+        sent++;
+        // marcar metadata para evitar reenvio
+        await supa.auth.admin.updateUserById(u.id, {
+          user_metadata: { ...(u.user_metadata||{}), magic_sent_at: new Date().toISOString() }
+        });
+      }
+    } catch (err) {
+      failed++;
+      console.error('Exceção ao enviar magic link para', u.email, err?.message || err);
+    }
+    if (idx < pending.length) {
+      await sleep(interval);
+    }
+  }
+
+  console.log('Envio concluído', { sent, failed, totalPending: pending.length, ratePerMinute: rate });
 }
 
 main().catch((e)=>{ console.error(e); process.exit(1); });

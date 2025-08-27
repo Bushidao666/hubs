@@ -65,11 +65,6 @@ export function AdminLayout({ children, breadcrumbs = [] }: AdminLayoutProps) {
 
   const menuItems = [
     { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { label: 'Aplicativos', href: '/admin/apps', icon: Database },
-    { label: 'Avisos', href: '/admin/notices', icon: Bell },
-    { label: 'Banners', href: '/admin/banners', icon: ImageIcon },
-    { label: 'Importar', href: '/admin/import', icon: Upload },
-    { label: 'Admins', href: '/admin/admins', icon: Users },
   ];
 
   const handleLogout = async () => {

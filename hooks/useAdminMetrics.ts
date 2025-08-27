@@ -125,11 +125,43 @@ export function useAdminMetrics() {
   // Fetch admin stats
   const fetchStats = useCallback(async () => {
     try {
+      // Tenta função RPC; se falhar, usa agregação via Auth API exposta em rota local
       const { data, error } = await supabase.rpc('hub_admin_get_stats');
-      if (error) throw error;
-      setStats(data);
+      if (!error && data) {
+        setStats(data);
+        return;
+      }
+    } catch {}
+    try {
+      const resp = await fetch('/api/admin/auth-stats');
+      const j = await resp.json();
+      if (resp.ok) {
+        setStats(prev => ({
+          ...(prev || {} as any),
+          total_users: j.total_users || 0,
+          active_users: j.active_users || 0,
+          new_users_today: j.new_users_today || 0,
+          new_users_week: j.new_users_week || 0,
+          active_subscriptions: j.active_subscriptions || 0,
+          total_apps: prev?.total_apps || 0,
+          online_apps: prev?.online_apps || 0,
+          maintenance_apps: prev?.maintenance_apps || 0,
+          offline_apps: prev?.offline_apps || 0,
+          total_user_access: prev?.total_user_access || 0,
+          active_subscriptions: prev?.active_subscriptions || 0,
+          users_by_app: prev?.users_by_app || {},
+          subscription_distribution: prev?.subscription_distribution || {},
+          recent_users: j.recent_users || [],
+          recent_access_grants: prev?.recent_access_grants || [],
+        } as any));
+        // fallback para current_online_users caso realtime não esteja preenchendo
+        setRealtimeMetrics(prev => ({
+          ...(prev || {} as any),
+          current_online_users: prev?.current_online_users || j.online_now || 0,
+        }));
+      }
     } catch (err) {
-      console.error('Error fetching admin stats:', err);
+      console.error('Error fetching auth stats fallback:', err);
       setError('Failed to fetch admin statistics');
     }
   }, []);

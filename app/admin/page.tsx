@@ -39,9 +39,18 @@ import {
   Cpu,
   HardDrive,
   Wifi,
-  MemoryStick
+  MemoryStick,
+  Bell,
+  Image,
+  Upload
 } from 'lucide-react';
 import Link from 'next/link';
+import { AppsTab } from '@/components/admin/tabs/AppsTab';
+import { UsersTab } from '@/components/admin/tabs/UsersTab';
+import { NoticesTab } from '@/components/admin/tabs/NoticesTab';
+import { BannersTab } from '@/components/admin/tabs/BannersTab';
+import { ImportTab } from '@/components/admin/tabs/ImportTab';
+import { AdminsTab } from '@/components/admin/tabs/AdminsTab';
 
 export default function AdminDashboard() {
   const {
@@ -540,6 +549,84 @@ export default function AdminDashboard() {
                 </CardBody>
               </Card>
             </div>
+          </Tab>
+
+          {/* Apps Tab */}
+          <Tab
+            key="apps"
+            title={
+              <div className="flex items-center space-x-2">
+                <Database className="w-4 h-4" />
+                <span>Aplicações</span>
+              </div>
+            }
+          >
+            <AppsTab />
+          </Tab>
+
+          {/* Users Tab */}
+          <Tab
+            key="users"
+            title={
+              <div className="flex items-center space-x-2">
+                <Users className="w-4 h-4" />
+                <span>Usuários</span>
+              </div>
+            }
+          >
+            <UsersTab />
+          </Tab>
+
+          {/* Notices Tab */}
+          <Tab
+            key="notices"
+            title={
+              <div className="flex items-center space-x-2">
+                <Bell className="w-4 h-4" />
+                <span>Avisos</span>
+              </div>
+            }
+          >
+            <NoticesTab />
+          </Tab>
+
+          {/* Banners Tab */}
+          <Tab
+            key="banners"
+            title={
+              <div className="flex items-center space-x-2">
+                <Image className="w-4 h-4" />
+                <span>Banners</span>
+              </div>
+            }
+          >
+            <BannersTab />
+          </Tab>
+
+          {/* Import Tab */}
+          <Tab
+            key="import"
+            title={
+              <div className="flex items-center space-x-2">
+                <Upload className="w-4 h-4" />
+                <span>Importar</span>
+              </div>
+            }
+          >
+            <ImportTab />
+          </Tab>
+
+          {/* Admins Tab */}
+          <Tab
+            key="admins"
+            title={
+              <div className="flex items-center space-x-2">
+                <Shield className="w-4 h-4" />
+                <span>Admins</span>
+              </div>
+            }
+          >
+            <AdminsTab />
           </Tab>
         </Tabs>
 
