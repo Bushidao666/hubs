@@ -23,13 +23,16 @@ export async function POST(req: Request) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     if (sendInvite) {
-      const base = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000';
-      await supa.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${base}/auth/callback?next=/set-password`,
-        },
-      });
+      const reqUrl = new URL(req.url);
+      const proto = (req.headers.get('x-forwarded-proto') || reqUrl.protocol.replace(':','')) as string;
+      const host = (req.headers.get('x-forwarded-host') || reqUrl.host) as string;
+      const envBase = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || (process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : undefined);
+      const base = `${proto}://${host}` || envBase || 'https://hub.blacksiderhub.com';
+
+      await supa.auth.admin.inviteUserByEmail(email, {
+        redirectTo: `${base}/auth/callback?next=/set-password`,
+        data: full_name ? { full_name } : undefined,
+      } as any);
     }
 
     return NextResponse.json({ user: data.user });
