@@ -6,7 +6,6 @@ import { Avatar } from '@heroui/avatar';
 import { Badge } from '@heroui/badge';
 import { Divider } from '@heroui/divider';
 import { Breadcrumbs, BreadcrumbItem } from '@heroui/breadcrumbs';
-import { Sheet, SheetContent, SheetTrigger } from '@heroui/sheet';
 import { 
   Settings, 
   LogOut,
