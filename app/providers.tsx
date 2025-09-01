@@ -33,9 +33,8 @@ export function Providers({ children, themeProps }: ProvidersProps) {
         enableSystem={false}
         forcedTheme="modern-dark"
       >
-        <ToastProvider placement="top-right" toastProps={{ timeout: 3500, shouldShowTimeoutProgress: true }}>
-          {children}
-        </ToastProvider>
+        <ToastProvider placement="top-right" toastProps={{ timeout: 3500, shouldShowTimeoutProgress: true }} />
+        {children}
       </NextThemesProvider>
     </HeroUIProvider>
   );
