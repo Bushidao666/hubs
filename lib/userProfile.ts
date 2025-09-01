@@ -7,9 +7,10 @@ export type UserProfileData = {
   avatarUrl: string | null;
 };
 
-async function tryFetchFromTable(userId: string, table: string) {
+async function tryFetchFromTable(userId: string, table: string, schema?: string) {
   try {
-    const { data, error } = await supabase
+    const client = schema ? supabase.schema(schema) : supabase;
+    const { data, error } = await client
       .from(table)
       .select('id, full_name, display_name, name, username, avatar_url, photo_url, picture, email')
       .eq('id', userId)
@@ -43,13 +44,11 @@ export async function fetchUserProfile(): Promise<UserProfileData | null> {
   const metaName = meta.name || meta.full_name || meta.display_name || meta.username || meta.user_name || '';
   const metaAvatar = meta.avatar_url || meta.avatar || meta.picture || meta.photo_url || null;
 
-  // Try common profile tables
-  const tables = ['hub_profiles', 'profiles', 'hub_users', 'users', 'members'];
-  let row: any = null;
-  for (const t of tables) {
-    // eslint-disable-next-line no-await-in-loop
-    const r = await tryFetchFromTable(user.id, t);
-    if (r) { row = r; break; }
+  // Buscar no schema "hub" primeiro (tabela principal)
+  let row: any = await tryFetchFromTable(user.id, 'hub_profiles', 'hub');
+  // Fallbacks opcionais se existir uma tabela pública chamada profiles
+  if (!row) {
+    row = await tryFetchFromTable(user.id, 'profiles');
   }
 
   const dbName = row?.display_name || row?.full_name || row?.name || row?.username || '';
