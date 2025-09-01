@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
-const PUBLIC_PATHS = ['/login', '/forgot-password', '/reset-password', '/set-password', '/auth', '/api/public', '/public', '/favicon.ico'];
+const PUBLIC_PATHS = ['/login', '/forgot-password', '/reset-password', '/set-password', '/auth', '/api/auth', '/api/public', '/public', '/favicon.ico'];
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
