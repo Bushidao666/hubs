@@ -38,11 +38,12 @@ async function main() {
   for (const u of pending) {
     idx++;
     try {
+      const base = process.env.APP_URL || process.env.SITE_URL || 'http://localhost:3000';
       const { error: e } = await supa.auth.signInWithOtp({
         email: u.email,
         options: {
-          // redirectTo: process.env.MAGIC_REDIRECT_TO || undefined,
-        }
+          emailRedirectTo: `${base}/auth/callback?next=/`,
+        },
       });
       if (e) {
         failed++;

@@ -23,7 +23,13 @@ export async function POST(req: Request) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     if (sendInvite) {
-      await supa.auth.signInWithOtp({ email });
+      const base = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000';
+      await supa.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${base}/auth/callback?next=/set-password`,
+        },
+      });
     }
 
     return NextResponse.json({ user: data.user });

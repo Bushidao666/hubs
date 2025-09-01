@@ -13,7 +13,13 @@ export async function POST(req: Request) {
     const { email } = body || {};
     if (!email) return NextResponse.json({ error: 'email required' }, { status: 400 });
     const supa = createClient(HUB_URL, HUB_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
-    const { error } = await supa.auth.signInWithOtp({ email });
+    const base = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000';
+    const { error } = await supa.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${base}/auth/callback?next=/`,
+      },
+    });
     if (error) return NextResponse.json({ error: error.message }, { status: 429 });
     return NextResponse.json({ ok: true });
   } catch (e: any) {

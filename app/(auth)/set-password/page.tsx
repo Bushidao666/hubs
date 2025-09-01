@@ -7,12 +7,11 @@ import { Card, CardBody } from "@heroui/card";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
-// usando o browser client com cookies
-
-function ResetPasswordContent() {
+function SetPasswordContent() {
   const router = useRouter();
   const params = useSearchParams();
   const tokenHash = params.get("token_hash");
+  const type = (params.get("type") || "signup") as "signup" | "email" | "recovery";
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [step, setStep] = useState<"verify" | "update">("verify");
@@ -21,26 +20,17 @@ function ResetPasswordContent() {
 
   useEffect(() => {
     (async () => {
+      if (!tokenHash) return;
       setLoading(true);
-      if (tokenHash) {
-        const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" });
-        setLoading(false);
-        if (error) {
-          setError(error.message);
-          return;
-        }
-        setStep("update");
+      const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+      setLoading(false);
+      if (error) {
+        setError(error.message);
         return;
       }
-      const { data: { session } } = await supabase.auth.getSession();
-      setLoading(false);
-      if (session) {
-        setStep("update");
-      } else {
-        setError("Link inválido ou expirado");
-      }
+      setStep("update");
     })();
-  }, [tokenHash]);
+  }, [tokenHash, type]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +39,7 @@ function ResetPasswordContent() {
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
     if (error) return setError(error.message);
-    router.replace("/login");
+    router.replace("/");
   };
 
   return (
@@ -57,26 +47,14 @@ function ResetPasswordContent() {
       <Card className="w-full max-w-md">
         <CardBody className="space-y-6 p-6">
           <div className="text-center space-y-1">
-            <h1 className="text-xl font-semibold">Redefinir senha</h1>
-            <p className="text-sm text-default-500">{step === "verify" ? "Validando link..." : "Defina sua nova senha"}</p>
+            <h1 className="text-xl font-semibold">Definir senha</h1>
+            <p className="text-sm text-default-500">{step === "verify" ? "Validando link..." : "Defina sua senha"}</p>
           </div>
           {error && <p className="text-sm text-danger text-center">{error}</p>}
           {step === "update" && (
             <form onSubmit={onSubmit} className="space-y-4">
-              <Input
-                type="password"
-                label="Nova senha"
-                value={password}
-                onValueChange={setPassword}
-                isRequired
-              />
-              <Input
-                type="password"
-                label="Confirmar senha"
-                value={confirm}
-                onValueChange={setConfirm}
-                isRequired
-              />
+              <Input type="password" label="Senha" value={password} onValueChange={setPassword} isRequired />
+              <Input type="password" label="Confirmar senha" value={confirm} onValueChange={setConfirm} isRequired />
               <Button type="submit" color="primary" isLoading={loading} className="w-full">
                 Salvar
               </Button>
@@ -88,10 +66,12 @@ function ResetPasswordContent() {
   );
 }
 
-export default function ResetPasswordPage() {
+export default function SetPasswordPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
-      <ResetPasswordContent />
+      <SetPasswordContent />
     </Suspense>
   );
 }
+
+

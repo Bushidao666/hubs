@@ -49,6 +49,18 @@ export default function LoginPage() {
     router.replace(to);
   };
 
+  const sendMagicLink = async () => {
+    setLoading(true);
+    setError(null);
+    const base = window.location.origin;
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${base}/auth/callback?next=/` },
+    });
+    setLoading(false);
+    if (error) setError(error.message);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -86,6 +98,11 @@ export default function LoginPage() {
             >
               Esqueceu a senha?
             </button>
+          </div>
+          <div className="text-center">
+            <Button variant="light" onPress={sendMagicLink} isLoading={loading}>
+              Enviar Magic Link
+            </Button>
           </div>
         </CardBody>
       </Card>
