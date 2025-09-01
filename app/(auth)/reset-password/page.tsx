@@ -24,6 +24,24 @@ function ResetPasswordContent() {
   useEffect(() => {
     (async () => {
       setLoading(true);
+      // 1) Suporte ao retorno implícito (tokens no fragmento da URL)
+      if (typeof window !== 'undefined' && window.location.hash) {
+        const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
+        const h = new URLSearchParams(hash);
+        const access_token = h.get('access_token');
+        const refresh_token = h.get('refresh_token');
+        const t = h.get('type');
+        if (access_token && refresh_token && (t === 'recovery' || t === 'email')) {
+          const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+          if (!error) {
+            // limpar o hash da URL para evitar reprocessar
+            window.history.replaceState({}, '', window.location.pathname + window.location.search);
+            setLoading(false);
+            setStep('update');
+            return;
+          }
+        }
+      }
       if (tokenHash) {
         const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" });
         setLoading(false);
