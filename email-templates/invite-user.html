@@ -100,7 +100,7 @@
                 <p>Junte-se a nossa comunidade e descubra todas as ferramentas poderosas que preparamos para você.</p>
             </div>
             
-            <a href="{{ .ConfirmationURL }}" class="button">
+            <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=signup&next=/set-password" class="button">
                 Aceitar Convite
             </a>
             

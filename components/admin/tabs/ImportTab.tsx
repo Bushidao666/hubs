@@ -160,6 +160,23 @@ export function ImportTab() {
             <h3 className="text-lg font-semibold">Resultado da Importação</h3>
           </CardHeader>
           <CardBody className="space-y-4">
+            {result.mappingDetected && (
+              <div className="p-3 bg-content1 rounded-lg border border-subtle">
+                <p className="text-sm font-medium mb-2">Mapeamento detectado</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-default-500">
+                  <div><span className="text-default-600">email:</span> {result.mappingDetected.email || '-'}</div>
+                  <div><span className="text-default-600">full_name:</span> {result.mappingDetected.full_name || '-'}</div>
+                  <div><span className="text-default-600">phone:</span> {result.mappingDetected.phone || '-'}</div>
+                  <div><span className="text-default-600">grants:</span> {result.mappingDetected.grants || '-'}</div>
+                </div>
+                {result.headers && (
+                  <div className="mt-2 text-xs">
+                    <span className="text-default-600">Cabeçalhos:</span> {result.headers.join(', ')}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Summary Stats */}
             <div className="grid grid-cols-3 gap-4">
               <Card className="bg-content1">
@@ -201,6 +218,33 @@ export function ImportTab() {
                 size="sm"
               />
             </div>
+
+            {/* Sample Preview */}
+            {result.sample?.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-3">Prévia (10 primeiras linhas normalizadas)</h4>
+                <ScrollShadow className="h-[200px]">
+                  <Table removeWrapper aria-label="Prévia">
+                    <TableHeader>
+                      <TableColumn>EMAIL</TableColumn>
+                      <TableColumn>NOME</TableColumn>
+                      <TableColumn>TELEFONE</TableColumn>
+                      <TableColumn>GRANTS</TableColumn>
+                    </TableHeader>
+                    <TableBody>
+                      {result.sample.map((r: any, idx: number) => (
+                        <TableRow key={idx}>
+                          <TableCell>{r.email}</TableCell>
+                          <TableCell>{r.full_name || '-'}</TableCell>
+                          <TableCell>{r.phone || '-'}</TableCell>
+                          <TableCell className="text-xs text-default-500">{r.grants || '-'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollShadow>
+              </div>
+            )}
 
             {/* Detailed Results Table */}
             {result.results?.length > 0 && (

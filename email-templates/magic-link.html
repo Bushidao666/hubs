@@ -103,7 +103,7 @@
                 <p>Sem senhas, sem complicação!</p>
             </div>
             
-            <a href="{{ .ConfirmationURL }}" class="button">
+            <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email&next=/" class="button">
                 Acessar SiderHub
             </a>
             
