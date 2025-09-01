@@ -6,6 +6,8 @@ import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { addToast } from "@heroui/toast";
+import { motion } from "framer-motion";
 
 function SetPasswordContent() {
   const router = useRouter();
@@ -26,6 +28,7 @@ function SetPasswordContent() {
       setLoading(false);
       if (error) {
         setError(error.message);
+        addToast({ title: "Link inválido", description: error.message, severity: "danger" });
         return;
       }
       setStep("update");
@@ -38,14 +41,20 @@ function SetPasswordContent() {
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
-    if (error) return setError(error.message);
+    if (error) {
+      setError(error.message);
+      addToast({ title: "Erro ao salvar", description: error.message, severity: "danger" });
+      return;
+    }
+    addToast({ title: "Senha definida", description: "Bem-vindo(a) ao Hub", severity: "success" });
     router.replace("/");
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardBody className="space-y-6 p-6">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="w-full max-w-md">
+        <Card className="w-full">
+          <CardBody className="space-y-6 p-6">
           <div className="text-center space-y-1">
             <h1 className="text-xl font-semibold">Definir senha</h1>
             <p className="text-sm text-default-500">{step === "verify" ? "Validando link..." : "Defina sua senha"}</p>
@@ -60,8 +69,9 @@ function SetPasswordContent() {
               </Button>
             </form>
           )}
-        </CardBody>
-      </Card>
+          </CardBody>
+        </Card>
+      </motion.div>
     </div>
   );
 }

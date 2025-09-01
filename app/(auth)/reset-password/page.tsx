@@ -6,6 +6,8 @@ import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { addToast } from "@heroui/toast";
+import { motion } from "framer-motion";
 
 // usando o browser client com cookies
 
@@ -27,6 +29,7 @@ function ResetPasswordContent() {
         setLoading(false);
         if (error) {
           setError(error.message);
+          addToast({ title: "Link inválido", description: error.message, severity: "danger" });
           return;
         }
         setStep("update");
@@ -37,7 +40,9 @@ function ResetPasswordContent() {
       if (session) {
         setStep("update");
       } else {
-        setError("Link inválido ou expirado");
+        const msg = "Link inválido ou expirado";
+        setError(msg);
+        addToast({ title: "Não foi possível validar", description: msg, severity: "warning" });
       }
     })();
   }, [tokenHash]);
@@ -48,14 +53,20 @@ function ResetPasswordContent() {
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
-    if (error) return setError(error.message);
+    if (error) {
+      setError(error.message);
+      addToast({ title: "Erro ao salvar", description: error.message, severity: "danger" });
+      return;
+    }
+    addToast({ title: "Senha atualizada", description: "Faça login novamente", severity: "success" });
     router.replace("/login");
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardBody className="space-y-6 p-6">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="w-full max-w-md">
+        <Card className="w-full">
+          <CardBody className="space-y-6 p-6">
           <div className="text-center space-y-1">
             <h1 className="text-xl font-semibold">Redefinir senha</h1>
             <p className="text-sm text-default-500">{step === "verify" ? "Validando link..." : "Defina sua nova senha"}</p>
@@ -82,8 +93,9 @@ function ResetPasswordContent() {
               </Button>
             </form>
           )}
-        </CardBody>
-      </Card>
+          </CardBody>
+        </Card>
+      </motion.div>
     </div>
   );
 }

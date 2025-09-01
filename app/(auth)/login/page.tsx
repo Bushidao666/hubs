@@ -6,6 +6,8 @@ import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { addToast } from "@heroui/toast";
+import { motion } from "framer-motion";
 
 // usando o browser client com cookies para garantir sessão acessível no middleware
 
@@ -26,6 +28,7 @@ export default function LoginPage() {
     if (error) {
       setLoading(false);
       setError(error.message);
+      addToast({ title: "Falha no login", description: error.message, severity: "danger" });
       return;
     }
     try {
@@ -43,6 +46,7 @@ export default function LoginPage() {
       console.warn('[LOGIN] set cookies error', e);
     }
     setLoading(false);
+    addToast({ title: "Login realizado", description: "Redirecionando...", severity: "success" });
     const params = new URLSearchParams(window.location.search);
     const to = params.get('redirectedFrom') || '/';
     console.log('[LOGIN] redirect to', to);
@@ -58,13 +62,19 @@ export default function LoginPage() {
       options: { emailRedirectTo: `${base}/auth/callback?next=/` },
     });
     setLoading(false);
-    if (error) setError(error.message);
+    if (error) {
+      setError(error.message);
+      addToast({ title: "Não foi possível enviar o Magic Link", description: error.message, severity: "danger" });
+    } else {
+      addToast({ title: "Magic Link enviado", description: "Verifique seu e-mail", severity: "success" });
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardBody className="space-y-6 p-6">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="w-full max-w-md">
+        <Card className="w-full">
+          <CardBody className="space-y-6 p-6">
           <div className="text-center space-y-1">
             <h1 className="text-xl font-semibold">Entrar no Blacksider Hub</h1>
             <p className="text-sm text-default-500">Use seu email e senha</p>
@@ -104,8 +114,9 @@ export default function LoginPage() {
               Enviar Magic Link
             </Button>
           </div>
-        </CardBody>
-      </Card>
+          </CardBody>
+        </Card>
+      </motion.div>
     </div>
   );
 }

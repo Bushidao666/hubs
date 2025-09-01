@@ -6,6 +6,7 @@ import * as React from "react";
 import { HeroUIProvider } from "@heroui/system";
 import { useRouter } from "next/navigation";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { ToastProvider } from "@heroui/toast";
 
 export interface ProvidersProps {
   children: React.ReactNode;
@@ -32,7 +33,9 @@ export function Providers({ children, themeProps }: ProvidersProps) {
         enableSystem={false}
         forcedTheme="modern-dark"
       >
-        {children}
+        <ToastProvider placement="top-right" toastProps={{ timeout: 3500, shouldShowTimeoutProgress: true }}>
+          {children}
+        </ToastProvider>
       </NextThemesProvider>
     </HeroUIProvider>
   );
